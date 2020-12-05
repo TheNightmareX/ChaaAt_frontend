@@ -1,7 +1,7 @@
 import { api } from "./index";
 import axios from "axios";
 
-/**@typedef {{ [id]: number, text: string, [sender]: number, chatroom: number, [creationTime]: string }} Message */
+/**@typedef {{ id: number, text: string, sender: number, chatroom: number, creationTime: string }} Message */
 
 export default new (class {
   /**
@@ -20,6 +20,6 @@ export default new (class {
    */
   @api
   create(message) {
-    return axios.post('messages/', message);
+    return axios.post("messages/", message);
   }
 })();

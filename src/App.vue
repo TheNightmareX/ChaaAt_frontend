@@ -6,23 +6,32 @@
 import { mapGetters } from "vuex";
 
 export default {
+  data: () => ({
+    stopSyncer: () => {},
+  }),
+
   computed: {
     ...mapGetters(["authed"]),
   },
 
   watch: {
     authed(v) {
-      if (v) this.syncer();
+      v ? this.syncer() : this.stopSyncer();
     },
   },
 
   methods: {
     async syncer() {
-      if (!this.authed) return;
       try {
-        await this.$store.dispatch("syncMessages");
-      } finally {
+        await Promise.race([
+          this.$store.dispatch("syncMessages"),
+          new Promise((resolve, reject) => {
+            this.stopSyncer = reject;
+          }),
+        ]);
         this.syncer();
+      } catch {
+        return;
       }
     },
   },
