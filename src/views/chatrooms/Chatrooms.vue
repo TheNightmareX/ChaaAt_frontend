@@ -16,6 +16,7 @@
         <v-list-group
           v-for="{ id, username, relationID, chatroom } of friendsAccepted"
           :key="id"
+          @change="chatroomID = chatroom"
         >
           <template #activator>
             <v-list-item-title>{{ username }}</v-list-item-title>
@@ -24,9 +25,6 @@
             <v-list-item-title class="d-flex justify-space-around">
               <v-btn icon @click="destroyRelation(relationID)">
                 <v-icon>mdi-delete</v-icon>
-              </v-btn>
-              <v-btn icon @click="chatroomID = chatroom">
-                <v-icon>mdi-send</v-icon>
               </v-btn>
             </v-list-item-title>
           </v-list-item>

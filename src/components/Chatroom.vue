@@ -8,10 +8,27 @@
       <v-container fluid>
         <v-sheet
           class="mb-2 px-2"
-          v-for="{ id, text, sender } of messages"
+          v-for="{
+            id,
+            text,
+            sender,
+            gap,
+            creationTime,
+            differentSender,
+          } of messages"
           :key="id"
         >
-          <v-row :justify="sender == user.id ? 'end' : 'start'">
+          <v-row
+            v-if="gap"
+            class="text-caption text--secondary"
+            justify="center"
+          >
+            {{ creationTime }}
+          </v-row>
+          <v-row
+            v-if="differentSender || gap"
+            :justify="sender == user.id ? 'end' : 'start'"
+          >
             {{ users[sender].username }}
           </v-row>
           <v-row :justify="sender == user.id ? 'end' : 'start'">
@@ -36,7 +53,6 @@
           autofocus
           clearable
           full-width
-          rows="5"
           counter="100"
           append-icon="mdi-send"
           :rules="[
@@ -80,20 +96,31 @@ export default {
     }),
     /**
      * Filter the messages to get the ones which are relevant
-     * to the current chatroom
+     * to the current chatroom and compute some extra values.
      */
     messages() {
       /**@type {Message[]} */
       const all = Object.values(this.messagesMap);
       /**@type {Message[]} */
       const filtered = all.filter((v) => v.chatroom == this.chatroomID);
-      return filtered;
+      const computed = filtered.map((v, i) => {
+        const INTERVAL = 60000 * 1;
+        const previous = filtered[i - 1];
+        const creation = new Date(v.creationTime);
+        return {
+          ...v,
+          creationTime: creation.toLocaleString(undefined, { hour12: false }),
+          gap: !previous || creation - new Date(previous.creationTime) > INTERVAL,
+          differentSender: !previous || v.sender != previous.sender,
+        };
+      });
+      return computed;
     },
   },
 
   watch: {
     messages() {
-      this.scrollToBottom()
+      this.scrollToBottom();
     },
   },
 
@@ -111,9 +138,8 @@ export default {
       this.$vuetify.goTo(9999, { container: el });
     },
   },
-
   mounted() {
-    this.scrollToBottom()
-  }
+    this.scrollToBottom();
+  },
 };
 </script>
