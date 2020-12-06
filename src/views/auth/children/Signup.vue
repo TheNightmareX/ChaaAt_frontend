@@ -36,7 +36,7 @@
       <v-text-field
         label="确认密码"
         type="password"
-        :rules="[rules.required, rules.password, rules.sameAs('password')]"
+        :rules="[rules.required, rules.password, rules.same('password')]"
         counter="20"
         :disabled="loading"
       ></v-text-field>
@@ -65,12 +65,12 @@ export default {
       rules: {
         required: (v) => !!v || "请填写此字段",
         username: (v) =>
-          (!!v && v.length <= 10 && /^\S*$/.test(v)) ||
-          "不多于10个字符且不包含空白字符",
+          (/^[0-9a-zA-Z@.+-_]{1,10}$/.test(v)) ||
+          "1-10个字符 只能包含：数字 字母 @ . + - _",
         password: (v) =>
-          (!!v && v.length >= 6 && v.length <= 20) ||
-          "不少于6个字符且不多于20个字符",
-        sameAs: (key) => (v) => v == this[key] || "两次输入不一致",
+          (/^.{6,20}$/.test(v)) ||
+          "6-20个字符",
+        same: (key) => (v) => v == this[key] || "两次输入不一致",
       },
     };
   },
