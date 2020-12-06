@@ -12,7 +12,7 @@ Vue.use(VueRouter);
 /**@type {import("vue-router").RouteConfig[]} */
 const routes = [
   {
-    path: "/",
+    path: "*",
     redirect: { name: "Chatrooms" },
   },
   {
