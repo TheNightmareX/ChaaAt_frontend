@@ -43,11 +43,11 @@
         </v-sheet>
       </v-container>
     </v-sheet>
-    <v-sheet>
-      <v-toolbar color="primary" dense flat></v-toolbar>
-      <v-form ref="form">
+    <v-form ref="form">
+      <v-sheet class="d-none d-sm-block">
+        <v-toolbar color="primary" dense flat></v-toolbar>
         <v-textarea
-          v-model="msgInput"
+          v-model="textInput"
           no-resize
           filled
           autofocus
@@ -56,15 +56,36 @@
           counter="100"
           append-icon="mdi-send"
           :rules="[
-            (v) => (v && /^\s*$/.test(v) ? '消息不得为空字符' : true),
+            (v) => !v || !!v.trim() || '消息不得为空',
             (v) => !v || v.length <= 100 || '至多100字',
           ]"
           hint="按下 Ctrl + Enter 发送"
           @click:append="send"
           @keydown.enter.ctrl="send"
         ></v-textarea>
-      </v-form>
-    </v-sheet>
+      </v-sheet>
+      <v-sheet color="primary" class="d-sm-none" style="overflow: hidden">
+        <v-container>
+          <v-row no-gutters>
+            <v-col class="py-0">
+              <v-textarea
+                v-model="textInput"
+                no-resize
+                autofocus
+                rows="1"
+                :auto-grow="autoGrow"
+                solo
+                dense
+                style="margin-bottom: -28px"
+                append-icon="mdi-send"
+                :rules="[(v) => !v || (!!v.trim() && v.length <= 100)]"
+                @click:append="send"
+              ></v-textarea>
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-sheet>
+    </v-form>
   </v-sheet>
 </template>
 
@@ -78,11 +99,9 @@ import { messages } from "../apis";
 export default {
   name: "Chatroom",
 
-  data() {
-    return {
-      msgInput: "",
-    };
-  },
+  data: () => ({
+    textInput: "",
+  }),
 
   props: {
     chatroomID: Number,
@@ -94,6 +113,9 @@ export default {
       users: "users",
       messagesMap: "messages",
     }),
+    autoGrow() {
+      return this.textInput.split("\n").length < 4;
+    },
     /**
      * Filter the messages to get the ones which are relevant
      * to the current chatroom and compute some extra values.
@@ -110,7 +132,8 @@ export default {
         return {
           ...v,
           creationTime: creation.toLocaleString(undefined, { hour12: false }),
-          gap: !previous || creation - new Date(previous.creationTime) > INTERVAL,
+          gap:
+            !previous || creation - new Date(previous.creationTime) > INTERVAL,
           differentSender: !previous || v.sender != previous.sender,
         };
       });
@@ -129,9 +152,9 @@ export default {
      * Create a message, and the syncer will update messages automatically.
      */
     send() {
-      if (!this.msgInput || !this.$refs.form.validate()) return;
-      messages.create({ text: this.msgInput, chatroom: this.chatroomID });
-      this.msgInput = "";
+      if (!this.textInput || !this.$refs.form.validate()) return;
+      messages.create({ text: this.textInput, chatroom: this.chatroomID });
+      this.textInput = "";
     },
     scrollToBottom() {
       const el = this.$refs["msgs-container"];

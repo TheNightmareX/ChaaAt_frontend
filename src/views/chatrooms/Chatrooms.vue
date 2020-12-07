@@ -105,17 +105,15 @@ import FriendCreationBtn from "../../components/FriendCreationBtn";
 export default {
   components: { Chatroom, ProfileMenu, FriendCreationBtn },
 
-  data() {
-    return {
-      navigationDrawerOpen: undefined,
-      friendsAccepted: [],
-      friendsNotAccepted: [],
-      friendsLoading: false,
-      snackbarOpen: false,
-      snackbarText: "",
-      chatroomID: 0,
-    };
-  },
+  data: () => ({
+    navigationDrawerOpen: undefined,
+    friendsAccepted: [],
+    friendsNotAccepted: [],
+    friendsLoading: false,
+    snackbarOpen: false,
+    snackbarText: "",
+    chatroomID: 0,
+  }),
 
   computed: {
     ...mapState(["user"]),

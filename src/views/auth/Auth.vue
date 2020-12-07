@@ -57,14 +57,12 @@ import "vuex";
 import { auth } from "../../apis";
 
 export default {
-  data() {
-    return {
-      navigationDrawerOpen: undefined,
-      loading: false,
-      snackbarVisible: false,
-      snackbarText: "",
-    };
-  },
+  data: () => ({
+    navigationDrawerOpen: undefined,
+    loading: false,
+    snackbarVisible: false,
+    snackbarText: "",
+  }),
 
   methods: {
     /**

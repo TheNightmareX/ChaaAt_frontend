@@ -30,13 +30,11 @@ import { friendRelations, auth } from "../apis";
 export default {
   name: "FriendCreationBtn",
 
-  data() {
-    return {
-      dialog: false,
-      usernameInput: "",
-      loading: false,
-    };
-  },
+  data: () => ({
+    dialog: false,
+    usernameInput: "",
+    loading: false,
+  }),
 
   methods: {
     async buildRelation() {
