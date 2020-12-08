@@ -99,9 +99,11 @@ import { messages } from "../apis";
 export default {
   name: "Chatroom",
 
-  data: () => ({
-    textInput: "",
-  }),
+  data() {
+    return {
+      textInput: "",
+    };
+  },
 
   props: {
     chatroomID: Number,

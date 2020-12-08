@@ -58,18 +58,20 @@
 
 <script>
 export default {
-  data: () => ({
-    username: "",
-    password: "",
-    rules: {
-      required: (v) => !!v || "请填写此字段",
-      username: (v) =>
-        /^[0-9a-zA-Z@.+-_]{1,10}$/.test(v) ||
-        "1-10个字符 只能包含：数字 字母 @ . + - _",
-      password: (v) => /^.{6,20}$/.test(v) || "6-20个字符",
-      same: (key) => (v) => v == this[key] || "两次输入不一致",
-    },
-  }),
+  data() {
+    return {
+      username: "",
+      password: "",
+      rules: {
+        required: (v) => !!v || "请填写此字段",
+        username: (v) =>
+          /^[0-9a-zA-Z@.+-_]{1,10}$/.test(v) ||
+          "1-10个字符 只能包含：数字 字母 @ . + - _",
+        password: (v) => /^.{6,20}$/.test(v) || "6-20个字符",
+        same: (key) => (v) => v == this[key] || "两次输入不一致",
+      },
+    };
+  },
 
   props: {
     loading: Boolean,

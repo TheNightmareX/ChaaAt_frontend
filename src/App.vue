@@ -6,9 +6,11 @@
 import { mapGetters } from "vuex";
 
 export default {
-  data: () => ({
-    stopSyncer: () => {},
-  }),
+  data() {
+    return {
+      stopSyncer: () => {},
+    };
+  },
 
   computed: {
     ...mapGetters(["authed"]),

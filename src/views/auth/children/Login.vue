@@ -46,13 +46,15 @@
 
 <script>
 export default {
-  data: () => ({
-    username: "",
-    password: "",
-    rules: {
-      required: (v) => !!v || "请填写此字段",
-    },
-  }),
+  data() {
+    return {
+      username: "",
+      password: "",
+      rules: {
+        required: (v) => !!v || "请填写此字段",
+      },
+    };
+  },
 
   props: {
     loading: Boolean,
