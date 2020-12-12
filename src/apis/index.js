@@ -14,7 +14,7 @@ export { default as messages } from "./messages";
  * @param {'snake' | 'camel'} to
  */
 function convertFieldCase(obj, to) {
-  if (typeof obj != "object") return obj;
+  if ([null, undefined].includes(obj) || ![Object, Array].includes(obj.constructor)) return obj;
   const newObj = obj.constructor();
   const re = { camel: /_(\w)/g, snake: /([a-z])([A-Z])/g }[to];
   const replacer = {
@@ -24,10 +24,7 @@ function convertFieldCase(obj, to) {
   for (const key in obj) {
     const value = obj[key];
     const newKey = re.test(key) ? key.replace(re, replacer) : key;
-    newObj[newKey] =
-      typeof value == "object" && value != null
-        ? convertFieldCase(value, to)
-        : value;
+    newObj[newKey] = convertFieldCase(value, to);
   }
   return newObj;
 }
