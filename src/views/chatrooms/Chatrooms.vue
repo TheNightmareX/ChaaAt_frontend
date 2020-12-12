@@ -14,41 +14,41 @@
         <v-subheader>现有联系人</v-subheader>
 
         <v-list-group
-          v-for="{ id, username, relationID, chatroom } of friendsAccepted"
+          v-for="{ id, user, chatroom } of friendRelations.accepted"
           :key="id"
           @change="chatroomID = chatroom"
         >
           <template #activator>
-            <v-list-item-title>{{ username }}</v-list-item-title>
+            <v-list-item-title>{{ user.username }}</v-list-item-title>
           </template>
           <v-list-item>
             <v-list-item-title class="d-flex justify-space-around">
-              <v-btn icon @click="destroyRelation(relationID)">
+              <v-btn icon @click="destroyRelation(id)">
                 <v-icon>mdi-delete</v-icon>
               </v-btn>
             </v-list-item-title>
           </v-list-item>
         </v-list-group>
 
-        <v-subheader v-if="friendsNotAccepted.length >= 1">
+        <v-subheader v-if="friendRelations.pending.length >= 1">
           待处理关系
         </v-subheader>
 
         <v-list-group
-          v-for="{ id, username, asSender, relationID } of friendsNotAccepted"
+          v-for="{ id, user, asSender } of friendRelations.pending"
           :key="id"
         >
           <template #activator>
             <v-list-item-title>
-              {{ username }}
+              {{ user.username }}
             </v-list-item-title>
           </template>
           <v-list-item>
             <v-list-item-title class="d-flex justify-space-around">
-              <v-btn icon @click="destroyRelation(relationID)">
+              <v-btn icon @click="destroyRelation(id)">
                 <v-icon>mdi-close</v-icon>
               </v-btn>
-              <v-btn v-if="!asSender" icon @click="acceptRelation(id)">
+              <v-btn v-if="!asSender" icon @click="acceptRelation(user.id)">
                 <v-icon>mdi-check</v-icon>
               </v-btn>
             </v-list-item-title>
@@ -59,19 +59,7 @@
 
         <v-list-item>
           <v-list-item-title class="d-flex justify-space-around">
-            <v-btn
-              :loading="friendsLoading"
-              :disabled="friendsLoading"
-              icon
-              @click="loadFriends"
-            >
-              <v-icon>mdi-refresh</v-icon>
-            </v-btn>
-
-            <FriendCreationBtn
-              @success="loadFriends"
-              @error="alert($event)"
-            ></FriendCreationBtn>
+            <FriendCreationBtn @error="alert($event)"></FriendCreationBtn>
           </v-list-item-title>
         </v-list-item>
       </v-list>
@@ -96,7 +84,8 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import axios from "axios";
+import { mapState, mapGetters } from "vuex";
 import { friendRelations } from "../../apis";
 import ProfileMenu from "../../components/ProfileMenu";
 import Chatroom from "../../components/Chatroom";
@@ -107,16 +96,65 @@ export default {
 
   data: () => ({
     navigationDrawerOpen: undefined,
-    friendsAccepted: [],
-    friendsNotAccepted: [],
-    friendsLoading: false,
     snackbarOpen: false,
     snackbarText: "",
     chatroomID: 0,
+    syncersRunning: false,
+    destroySyncers: undefined,
   }),
 
   computed: {
     ...mapState(["user"]),
+    ...mapGetters(["friendRelations"]),
+  },
+
+  watch: {
+    /**
+     * Close the chatroom if the relation is destroyed.
+     */
+    friendRelations({ accepted }) {
+      if (!accepted.some((v) => v.chatroom == this.chatroomID)) {
+        this.chatroomID = 0;
+      }
+    },
+    /**
+     * true: set up the syncers
+     * false: stop the syncers after handling the pending request
+     */
+    syncersRunning(v) {
+      if (v) {
+        const source = axios.CancelToken.source();
+        this.destroySyncers = source.cancel;
+        (async () => {
+          try {
+            console.log("messages syncer is running");
+            while (this.syncersRunning) {
+              await this.$store.dispatch("syncMessages", {
+                cancelToken: source.token,
+              });
+            }
+          } catch {
+            null;
+          } finally {
+            console.log("messages syncer is stoped");
+          }
+        })();
+        (async () => {
+          try {
+            console.log("friend relations syncer is running");
+            while (this.syncersRunning) {
+              await this.$store.dispatch("syncFriendRelations", {
+                cancelToken: source.token,
+              });
+            }
+          } catch {
+            null;
+          } finally {
+            console.log("friend relations syncer is stoped");
+          }
+        })();
+      }
+    },
   },
 
   methods: {
@@ -128,37 +166,12 @@ export default {
       this.snackbarText = text;
       this.snackbarOpen = true;
     },
-    async loadFriends() {
-      this.friendsLoading = true;
-      const relations = (await friendRelations.list()).results;
-      this.friendsAccepted = [];
-      this.friendsNotAccepted = [];
-      for (const {
-        id,
-        sourceUser,
-        targetUser,
-        accepted,
-        chatroom,
-      } of relations) {
-        const asSender = sourceUser.username == this.user.username;
-        const user = asSender ? targetUser : sourceUser;
-        (accepted ? this.friendsAccepted : this.friendsNotAccepted).push({
-          relationID: id,
-          ...user,
-          asSender,
-          chatroom,
-        });
-        this.$store.commit("appendUsers", { users: [user] });
-      }
-      this.friendsLoading = false;
-    },
     /**
      *
      * @param {number} targetUserID
      */
     async acceptRelation(targetUserID) {
       await friendRelations.create(targetUserID);
-      await this.loadFriends();
     },
     /**
      *
@@ -166,12 +179,16 @@ export default {
      */
     async destroyRelation(id) {
       await friendRelations.destroy(id);
-      await this.loadFriends();
     },
   },
 
   created() {
-    this.loadFriends();
+    this.syncersRunning = true;
+  },
+
+  destroyed() {
+    this.syncersRunning = false;
+    this.destroySyncers();
   },
 };
 </script>

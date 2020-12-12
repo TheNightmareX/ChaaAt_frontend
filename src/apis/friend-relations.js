@@ -16,11 +16,12 @@ export default new (class {
   }
   /**
    *
+   * @param {number} page
    * @returns {Promise<{ count: number, next: string, previous: string, results: Relation[] }>}
    */
   @api
-  list() {
-    return axios.get("friend-relations/");
+  list(page = 1) {
+    return axios.get("friend-relations/", { params: { page } });
   }
   /**
    *
@@ -30,5 +31,20 @@ export default new (class {
   @api
   destroy(id) {
     return axios.delete(`friend-relations/${id}/`);
+  }
+  /**
+   * @param {import("axios").CancelToken}
+   * @returns {Promise<['save' | 'delete', Relation | number][]>}
+   */
+  @api
+  getUpdations(cancelToken = undefined) {
+    return axios.get("friend-relations/updates/", { cancelToken });
+  }
+  /**
+   * @returns {Promise<"">}
+   */
+  @api
+  clearUpdations() {
+    return axios.delete("friend-relations/updates/");
   }
 })();

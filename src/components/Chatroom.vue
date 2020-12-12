@@ -12,24 +12,24 @@
             id,
             text,
             sender,
-            gap,
+            hasTimeGap,
             creationTime,
-            differentSender,
+            isDifferentSender,
           } of messages"
           :key="id"
         >
           <v-row
-            v-if="gap"
+            v-if="hasTimeGap"
             class="text-caption text--secondary"
             justify="center"
           >
             {{ creationTime }}
           </v-row>
           <v-row
-            v-if="differentSender || gap"
+            v-if="isDifferentSender || hasTimeGap"
             :justify="sender == user.id ? 'end' : 'start'"
           >
-            {{ users[sender].username }}
+            {{ (users[sender] || { username: "[未知用户]" }).username }}
           </v-row>
           <v-row :justify="sender == user.id ? 'end' : 'start'">
             <v-card
@@ -91,7 +91,7 @@
 
 <script>
 import "vuetify";
-import { mapState } from "vuex";
+import { mapGetters, mapState } from "vuex";
 import { messages } from "../apis";
 
 /**@typedef {import('../apis/messages').Message} Message */
@@ -110,36 +110,14 @@ export default {
   },
 
   computed: {
-    ...mapState({
-      user: "user",
-      users: "users",
-      messagesMap: "messages",
-    }),
+    ...mapState(["user"]),
+    ...mapGetters(["users"]),
+    messages() {
+      this.$store.state.messages;
+      return this.$store.getters.messages(this.chatroomID);
+    },
     autoGrow() {
       return this.textInput.split("\n").length < 4;
-    },
-    /**
-     * Filter the messages to get the ones which are relevant
-     * to the current chatroom and compute some extra values.
-     */
-    messages() {
-      /**@type {Message[]} */
-      const all = Object.values(this.messagesMap);
-      /**@type {Message[]} */
-      const filtered = all.filter((v) => v.chatroom == this.chatroomID);
-      const computed = filtered.map((v, i) => {
-        const INTERVAL = 60000 * 1;
-        const previous = filtered[i - 1];
-        const creation = new Date(v.creationTime);
-        return {
-          ...v,
-          creationTime: creation.toLocaleString(undefined, { hour12: false }),
-          gap:
-            !previous || creation - new Date(previous.creationTime) > INTERVAL,
-          differentSender: !previous || v.sender != previous.sender,
-        };
-      });
-      return computed;
     },
   },
 
