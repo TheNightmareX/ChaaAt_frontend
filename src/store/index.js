@@ -33,6 +33,7 @@ export default new Vuex.Store({
       return users;
     },
     messages(state) {
+      state.messages;
       return (chatroomID) => {
         /**@type {Message[]} */
         const all = Object.values(state.messages);

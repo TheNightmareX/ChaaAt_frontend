@@ -113,7 +113,6 @@ export default {
     ...mapState(["user"]),
     ...mapGetters(["users"]),
     messages() {
-      this.$store.state.messages;
       return this.$store.getters.messages(this.chatroomID);
     },
     autoGrow() {
