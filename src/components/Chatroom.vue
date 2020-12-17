@@ -6,6 +6,11 @@
       style="height: 0; overflow: auto"
     >
       <v-container fluid>
+        <v-row
+          v-intersect="(entries) => (topExposed = entries[0].isIntersecting)"
+          style="height: 1px"
+        >
+        </v-row>
         <v-sheet
           class="mb-2 px-2"
           v-for="{
@@ -102,6 +107,8 @@ export default {
   data() {
     return {
       textInput: "",
+      topExposed: false,
+      messagesHead: 0,
     };
   },
 
@@ -112,21 +119,41 @@ export default {
   computed: {
     ...mapState(["user"]),
     ...mapGetters(["users"]),
-    messages() {
+    /**@returns {Message[]} */
+    allMessages() {
       return this.$store.getters.messages(this.chatroomID);
     },
+    /**@returns {Message[]} */
+    messages() {
+      return this.allMessages.slice(this.messagesHead);
+    },
+    /**@returns {boolean} */
     autoGrow() {
       return this.textInput.split("\n").length < 4;
     },
   },
 
   watch: {
-    messages() {
+    chatroomID() {
+      this.init();
+    },
+    allMessages() {
       this.scrollToBottom();
+    },
+    async topExposed(exposed) {
+      if (!exposed) return;
+      while (this.topExposed && this.messagesHead > 0) {
+        this.messagesHead--;
+        await new Promise((r) => setTimeout(r, 50));
+      }
     },
   },
 
   methods: {
+    init() {
+      this.messagesHead = this.allMessages.length - 40;
+      this.scrollToBottom();
+    },
     /**
      * Create a message, and the syncer will update messages automatically.
      */
@@ -141,7 +168,7 @@ export default {
     },
   },
   mounted() {
-    this.scrollToBottom();
+    this.init();
   },
 };
 </script>
