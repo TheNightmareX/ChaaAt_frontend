@@ -47,4 +47,13 @@ export default new (class {
   signup(username, password) {
     return axios.post("users/", { username, password });
   }
+  /**
+   *
+   * @param {string} search
+   * @returns {Promise<{ count: number, previous: string, next: string, results: User[] }>}
+   */
+  @api
+  list(search = undefined) {
+    return axios.get("users/", { params: { search } });
+  }
 })();
