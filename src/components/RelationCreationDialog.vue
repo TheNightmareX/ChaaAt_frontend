@@ -1,12 +1,10 @@
 <template>
   <v-dialog v-model="dialog" max-width="500">
     <template #activator="{ attrs, on }">
-      <v-btn icon v-bind="attrs" v-on="on">
-        <v-icon>mdi-plus</v-icon>
-      </v-btn>
+      <slot :on="on" :attrs="attrs"></slot>
     </template>
     <v-card>
-      <v-card-title>关系申请</v-card-title>
+      <v-card-title>好友申请</v-card-title>
       <v-card-text>
         <v-form ref="form" :disabled="loading" @submit.prevent="buildRelation">
           <v-text-field
@@ -25,27 +23,25 @@
 </template>
 
 <script>
-import { friendRelations, auth } from "../apis";
+import * as apis from "../apis";
 
 export default {
-  name: "FriendCreationBtn",
+  name: "RelationCreationDialog",
 
-  data() {
-    return {
-      dialog: false,
-      usernameInput: "",
-      loading: false,
-    };
-  },
+  data: () => ({
+    dialog: false,
+    usernameInput: "",
+    loading: false,
+  }),
 
   methods: {
     async buildRelation() {
       if (this.usernameInput && this.$refs.form.validate()) {
         try {
           this.loading = true;
-          const targetUser = (await auth.retrieve(this.usernameInput)).id;
+          const targetUser = (await apis.auth.retrieve(this.usernameInput)).id;
           try {
-            await friendRelations.create(targetUser);
+            await apis.friendRelations.create(targetUser);
             this.$emit("success");
           } catch {
             this.$emit("error", "联系人已存在或待同意");

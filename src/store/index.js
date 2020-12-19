@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import { auth, friendRelations, messages } from "../apis";
+import * as apis from "../apis";
 
 /**@typedef {import("../apis/auth").User} User */
 /**@typedef {import("../apis/messages").Message} Message */
@@ -12,12 +12,6 @@ export default new Vuex.Store({
   state: {
     /**@type {User} */
     user: {},
-    /**@type {Object<number, Message>} */
-    messages: {},
-    messagesLoaded: false,
-    /**@type {Object<number, FriendRelation>} */
-    friendRelations: {},
-    friendRelationsLoaded: false,
   },
   getters: {
     authed(state) {
@@ -25,57 +19,14 @@ export default new Vuex.Store({
     },
     users(state, getters) {
       const users = { [state.user.id]: state.user };
-      for (const relationSet of Object.values(getters.friendRelations)) {
+      for (const relationSet of Object.values(
+        getters["friendRelations/relations"]
+      )) {
         for (const relation of relationSet) {
           users[relation.user.id] = relation.user;
         }
       }
       return users;
-    },
-    messages(state) {
-      state.messages;
-      return (chatroomID) => {
-        /**@type {Message[]} */
-        const all = Object.values(state.messages);
-        const filtered = all.filter(
-          (message) => message.chatroom == chatroomID
-        );
-        const computed = filtered.map((message, index) => {
-          const INTERVAL = 60000 * 1;
-          const previous = filtered[index - 1];
-          const creation = new Date(message.creationTime);
-          return {
-            ...message,
-            creationTime: creation.toLocaleString(undefined, { hour12: false }),
-            hasTimeGap:
-              !previous ||
-              creation - new Date(previous.creationTime) > INTERVAL,
-            isDifferentSender: !previous || message.sender != previous.sender,
-          };
-        });
-        return computed;
-      };
-    },
-    friendRelations(state) {
-      const accepted = [];
-      const pending = [];
-      for (const id in state.friendRelations) {
-        const {
-          sourceUser,
-          targetUser,
-          accepted: isAccepted,
-          chatroom,
-        } = state.friendRelations[id];
-        const asSender = sourceUser.username == state.user.username;
-        const user = asSender ? targetUser : sourceUser;
-        (isAccepted ? accepted : pending).push({
-          id,
-          user,
-          asSender,
-          chatroom,
-        });
-      }
-      return { accepted, pending };
     },
   },
   mutations: {
@@ -86,26 +37,11 @@ export default new Vuex.Store({
       if (user) {
         state.user = user;
       } else {
-        state.messages = {};
-        state.messagesLoaded = false;
-        state.friendRelations = {};
-        state.friendRelationsLoaded = false;
+        state.messages.messages = {};
+        state.messages.loaded = false;
+        state.friendRelations.relations = {};
+        state.friendRelations.loaded = false;
       }
-    },
-    appendMessages(state, { messages }) {
-      for (const msg of messages) {
-        Vue.set(state.messages, msg.id, msg);
-      }
-      state.messagesLoaded = true;
-    },
-    appendFriendRelations(state, { relations }) {
-      for (const relation of relations) {
-        Vue.set(state.friendRelations, relation.id, relation);
-      }
-      state.friendRelationsLoaded = true;
-    },
-    deleteFriendRelation(state, { id }) {
-      Vue.delete(state.friendRelations, id);
     },
   },
   actions: {
@@ -116,64 +52,153 @@ export default new Vuex.Store({
       commit("auth", {
         user:
           username && password
-            ? await auth.login(username, password)
-            : await auth.current(),
+            ? await apis.auth.login(username, password)
+            : await apis.auth.current(),
       });
     },
     async logout({ commit }) {
-      await auth.logout();
+      await apis.auth.logout();
       commit("auth");
     },
-    /**
-     * Load all the messages when it is called for the first time
-     * , otherwise sync messages.
-     */
-    async syncMessages({ state, commit }, { cancelToken = undefined } = {}) {
-      if (!state.messagesLoaded) {
-        messages.clearUpdations();
-        let nextPage = 1;
-        while (nextPage) {
-          const { next, results } = await messages.list(nextPage);
-          next ? nextPage++ : (nextPage = false);
-          commit("appendMessages", { messages: results });
-        }
-      } else {
-        const updations = await messages.getUpdations(cancelToken);
-        commit("appendMessages", { messages: updations });
-      }
-    },
-    /**
-     * Load all the friend relations when it is called for the first time
-     * , otherwise sync friend relations.
-     */
-    async syncFriendRelations(
-      { state, commit },
-      { cancelToken = undefined } = {}
-    ) {
-      if (!state.friendRelationsLoaded) {
-        friendRelations.clearUpdations();
-        let nextPage = 1;
-        while (nextPage) {
-          const { next, results } = await friendRelations.list(nextPage);
-          next ? nextPage++ : (nextPage = false);
-          commit("appendFriendRelations", {
-            relations: results,
-          });
-        }
-      } else {
-        const updations = await friendRelations.getUpdations(cancelToken);
-        for (const [action, value] of updations) {
-          switch (action) {
-            case "save":
-              commit("appendFriendRelations", { relations: [value] });
-              break;
-            case "delete":
-              commit("deleteFriendRelation", { id: value });
-              break;
+  },
+  modules: {
+    messages: {
+      namespaced: true,
+      state: {
+        /**@type {Object<number, Message>} */
+        messages: {},
+        loaded: false,
+      },
+      getters: {
+        messages(state) {
+          state.messages;
+          return (chatroomID) => {
+            /**@type {Message[]} */
+            const all = Object.values(state.messages);
+            const filtered = all.filter(
+              (message) => message.chatroom == chatroomID
+            );
+            const computed = filtered.map((message, index) => {
+              const INTERVAL = 60000 * 1;
+              const previous = filtered[index - 1];
+              const creation = new Date(message.creationTime);
+              return {
+                ...message,
+                creationTime: creation.toLocaleString(undefined, {
+                  hour12: false,
+                }),
+                hasTimeGap:
+                  !previous ||
+                  creation - new Date(previous.creationTime) > INTERVAL,
+                isDifferentSender:
+                  !previous || message.sender != previous.sender,
+              };
+            });
+            return computed;
+          };
+        },
+      },
+      mutations: {
+        append(state, { messages }) {
+          messages.forEach((msg) => Vue.set(state.messages, msg.id, msg));
+          state.loaded = true;
+        },
+      },
+      actions: {
+        /**
+         * Load all the messages when it is called for the first time
+         * , otherwise sync messages.
+         */
+        async sync({ state, commit }, { cancelToken = undefined } = {}) {
+          if (!state.loaded) {
+            apis.messages.clearUpdations();
+            let nextPage = 1;
+            while (nextPage) {
+              const { next, results } = await apis.messages.list(nextPage);
+              next ? nextPage++ : (nextPage = false);
+              commit("append", { messages: results });
+            }
+          } else {
+            const updations = await apis.messages.getUpdations(cancelToken);
+            commit("append", { messages: updations });
           }
-        }
-      }
+        },
+      },
+    },
+    friendRelations: {
+      namespaced: true,
+      state: {
+        /**@type {Object<number, FriendRelation>} */
+        relations: {},
+        loaded: false,
+      },
+      getters: {
+        relations(state, getters, rootState) {
+          const accepted = [];
+          const pending = [];
+          for (const id in state.relations) {
+            const {
+              sourceUser,
+              targetUser,
+              accepted: isAccepted,
+              chatroom,
+            } = state.relations[id];
+            const asSender = sourceUser.username == rootState.user.username;
+            const user = asSender ? targetUser : sourceUser;
+            (isAccepted ? accepted : pending).push({
+              id,
+              user,
+              asSender,
+              chatroom,
+            });
+          }
+          return { accepted, pending };
+        },
+      },
+      mutations: {
+        append(state, { relations }) {
+          relations.forEach((r) => Vue.set(state.relations, r.id, r));
+          state.loaded = true;
+        },
+        delete(state, { id }) {
+          Vue.delete(state.relations, id);
+        },
+      },
+      actions: {
+        /**
+         * Load all the friend relations when it is called for the first time
+         * , otherwise sync friend relations.
+         */
+        async sync({ state, commit }, { cancelToken = undefined } = {}) {
+          if (!state.loaded) {
+            apis.friendRelations.clearUpdations();
+            let nextPage = 1;
+            while (nextPage) {
+              const { next, results } = await apis.friendRelations.list(
+                nextPage
+              );
+              next ? nextPage++ : (nextPage = false);
+              commit("append", {
+                relations: results,
+              });
+            }
+          } else {
+            const updations = await apis.friendRelations.getUpdations(
+              cancelToken
+            );
+            for (const [action, value] of updations) {
+              switch (action) {
+                case "save":
+                  commit("append", { relations: [value] });
+                  break;
+                case "delete":
+                  commit("delete", { id: value });
+                  break;
+              }
+            }
+          }
+        },
+      },
     },
   },
-  modules: {},
 });

@@ -1,9 +1,7 @@
 <template>
-  <v-menu offset-y transition="scale-transition" origin="top right">
+  <v-menu v-bind="$attrs">
     <template #activator="{ attrs, on }">
-      <v-btn icon v-bind="attrs" v-on="on">
-        <v-icon>mdi-account</v-icon>
-      </v-btn>
+      <slot :attrs="attrs" :on="on"></slot>
     </template>
 
     <v-list>
@@ -28,7 +26,7 @@
 
 <script>
 import "vue-router";
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 export default {
   name: "ProfileMenu",
@@ -38,8 +36,9 @@ export default {
   },
 
   methods: {
+    ...mapActions({ performLogout: "logout" }),
     async logout() {
-      await this.$store.dispatch("logout");
+      await this.performLogout("logout");
       this.$router.push({ name: "Login", query: { next: location.pathname } });
     },
   },

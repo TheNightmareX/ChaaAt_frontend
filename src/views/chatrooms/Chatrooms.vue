@@ -6,67 +6,40 @@
       ></v-app-bar-nav-icon>
       <v-toolbar-title>ChaaAt</v-toolbar-title>
       <v-spacer></v-spacer>
-      <ProfileMenu></ProfileMenu>
+      <ProfileMenu offset-y transition="scale-transition" origin="top right">
+        <template v-slot="{ attrs, on }">
+          <v-btn icon v-bind="attrs" v-on="on">
+            <v-icon>mdi-account</v-icon>
+          </v-btn>
+        </template>
+      </ProfileMenu>
     </v-app-bar>
 
     <v-navigation-drawer v-model="navigationDrawerOpen" app clipped>
-      <v-list class="py-0">
-        <v-subheader>现有联系人</v-subheader>
-
-        <v-list-group
-          v-for="{ id, user, chatroom } of friendRelations.accepted"
-          :key="id"
-          @change="chatroomID = chatroom"
-        >
-          <template #activator>
-            <v-list-item-title>{{ user.username }}</v-list-item-title>
-          </template>
+      <FriendList @change="chatroomID = $event">
+        <template #bottom>
           <v-list-item>
             <v-list-item-title class="d-flex justify-space-around">
-              <v-btn icon @click="destroyRelation(id)">
-                <v-icon>mdi-delete</v-icon>
-              </v-btn>
+              <RelationCreationDialog @error="alert($event)">
+                <template v-slot="{ attrs, on }">
+                  <v-btn icon v-bind="attrs" v-on="on">
+                    <v-icon>mdi-plus</v-icon>
+                  </v-btn>
+                </template>
+              </RelationCreationDialog>
             </v-list-item-title>
           </v-list-item>
-        </v-list-group>
-
-        <v-subheader v-if="friendRelations.pending.length >= 1">
-          待处理关系
-        </v-subheader>
-
-        <v-list-group
-          v-for="{ id, user, asSender } of friendRelations.pending"
-          :key="id"
-        >
-          <template #activator>
-            <v-list-item-title>
-              {{ user.username }}
-            </v-list-item-title>
-          </template>
-          <v-list-item>
-            <v-list-item-title class="d-flex justify-space-around">
-              <v-btn icon @click="destroyRelation(id)">
-                <v-icon>mdi-close</v-icon>
-              </v-btn>
-              <v-btn v-if="!asSender" icon @click="acceptRelation(user.id)">
-                <v-icon>mdi-check</v-icon>
-              </v-btn>
-            </v-list-item-title>
-          </v-list-item>
-        </v-list-group>
-
-        <v-divider></v-divider>
-
-        <v-list-item>
-          <v-list-item-title class="d-flex justify-space-around">
-            <FriendCreationBtn @error="alert($event)"></FriendCreationBtn>
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
+        </template>
+      </FriendList>
     </v-navigation-drawer>
 
     <v-main>
-      <Chatroom v-if="chatroomID" :chatroomID="chatroomID"></Chatroom>
+      <Chatroom
+        v-if="
+          friendRelations.accepted.some((v) => v.chatroom == this.chatroomID)
+        "
+        :chatroomID="chatroomID"
+      ></Chatroom>
       <v-container v-else>
         <v-row class="mt-12 mb-3" justify="center">
           <v-icon size="100">mdi-alert-circle-outline</v-icon>
@@ -77,46 +50,43 @@
       </v-container>
     </v-main>
 
-    <v-snackbar color="warning" v-model="snackbarOpen" app top right>
-      {{ snackbarText }}
-    </v-snackbar>
+    <Notifier ref="notifier"></Notifier>
   </v-app>
 </template>
 
 <script>
 import axios from "axios";
-import { mapState, mapGetters } from "vuex";
-import { friendRelations } from "../../apis";
+import { mapState, mapGetters, mapActions } from "vuex";
 import ProfileMenu from "../../components/ProfileMenu";
 import Chatroom from "../../components/Chatroom";
-import FriendCreationBtn from "../../components/FriendCreationBtn";
+import RelationCreationDialog from "../../components/RelationCreationDialog";
+import Notifier from "../../components/Notifier";
+import FriendList from "../../components/FriendList";
 
 export default {
-  components: { Chatroom, ProfileMenu, FriendCreationBtn },
+  components: {
+    Chatroom,
+    ProfileMenu,
+    RelationCreationDialog,
+    Notifier,
+    FriendList,
+  },
 
   data: () => ({
     navigationDrawerOpen: undefined,
-    snackbarOpen: false,
-    snackbarText: "",
     chatroomID: 0,
     syncersRunning: false,
-    destroySyncers: undefined,
+    syncersKiller: undefined,
   }),
 
   computed: {
     ...mapState(["user"]),
-    ...mapGetters(["friendRelations"]),
+    ...mapGetters("friendRelations", {
+      friendRelations: "relations",
+    }),
   },
 
   watch: {
-    /**
-     * Close the chatroom if the relation is destroyed.
-     */
-    friendRelations({ accepted }) {
-      if (!accepted.some((v) => v.chatroom == this.chatroomID)) {
-        this.chatroomID = 0;
-      }
-    },
     /**
      * true: set up the syncers
      * false: stop the syncers after handling the pending request
@@ -124,61 +94,41 @@ export default {
     syncersRunning(v) {
       if (v) {
         const source = axios.CancelToken.source();
-        this.destroySyncers = source.cancel;
-        (async () => {
-          try {
-            console.log("messages syncer is running");
-            while (this.syncersRunning) {
-              await this.$store.dispatch("syncMessages", {
+        this.syncersKiller = source.cancel;
+        const run = async (syncfn, name) => {
+          console.log(`${name} syncer is running`);
+          while (this.syncersRunning) {
+            try {
+              await syncfn({
                 cancelToken: source.token,
               });
+            } catch (e) {
+              if (e.constructor == axios.Cancel) break;
+              else {
+                console.warn(`Caught error in ${name} syncer`, e);
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+              }
             }
-          } catch {
-            null;
-          } finally {
-            console.log("messages syncer is stoped");
           }
-        })();
-        (async () => {
-          try {
-            console.log("friend relations syncer is running");
-            while (this.syncersRunning) {
-              await this.$store.dispatch("syncFriendRelations", {
-                cancelToken: source.token,
-              });
-            }
-          } catch {
-            null;
-          } finally {
-            console.log("friend relations syncer is stoped");
-          }
-        })();
+          console.log(`${name} syncer is stoped`);
+        };
+        run(this.syncMessages, "messages");
+        run(this.syncFriendRelations, "friend relations");
       }
     },
   },
 
   methods: {
+    ...mapActions({
+      syncMessages: "messages/sync",
+      syncFriendRelations: "friendRelations/sync",
+    }),
     /**
      *
-     * @param {string} text
+     * @param {string} msg
      */
-    alert(text) {
-      this.snackbarText = text;
-      this.snackbarOpen = true;
-    },
-    /**
-     *
-     * @param {number} targetUserID
-     */
-    async acceptRelation(targetUserID) {
-      await friendRelations.create(targetUserID);
-    },
-    /**
-     *
-     * @param {number} id
-     */
-    async destroyRelation(id) {
-      await friendRelations.destroy(id);
+    alert(msg) {
+      this.$refs.notifier.notify(msg, "warning");
     },
   },
 
@@ -188,7 +138,7 @@ export default {
 
   destroyed() {
     this.syncersRunning = false;
-    this.destroySyncers();
+    this.syncersKiller();
   },
 };
 </script>

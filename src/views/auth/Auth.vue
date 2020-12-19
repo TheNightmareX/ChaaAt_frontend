@@ -45,41 +45,38 @@
       </v-container>
     </v-main>
 
-    <v-snackbar color="warning" top right v-model="snackbarVisible" app>
-      {{ snackbarText }}
-    </v-snackbar>
+    <Notifier ref="notifier"></Notifier>
   </v-app>
 </template>
 
 <script>
 import "vue-router";
-import "vuex";
-import { auth } from "../../apis";
+import { mapActions } from "vuex";
+import * as apis from "../../apis";
+import Notifier from "../../components/Notifier";
 
 export default {
-  data() {
-    return {
-      navigationDrawerOpen: undefined,
-      loading: false,
-      snackbarVisible: false,
-      snackbarText: "",
-    };
-  },
+  components: { Notifier },
+
+  data: () => ({
+    navigationDrawerOpen: undefined,
+    loading: false,
+  }),
 
   methods: {
+    ...mapActions({ performLogin: "login" }),
     /**
      *
      * @param {string} msg
      */
     alert(msg) {
-      this.snackbarText = msg;
-      this.snackbarVisible = true;
+      this.$refs.notifier.notify(msg, "warning");
     },
     async login({ username, password }) {
       if (!this.$refs.form.validate()) return;
       try {
         this.loading = true;
-        await this.$store.dispatch("login", { username, password });
+        await this.performLogin({ username, password });
         this.next();
       } catch {
         this.alert("用户名或密码错误");
@@ -91,8 +88,8 @@ export default {
       if (!this.$refs.form.validate()) return;
       try {
         this.loading = true;
-        await auth.signup(username, password);
-        await this.$store.dispatch("login", { username, password });
+        await apis.auth.signup(username, password);
+        await this.performLogin({ username, password });
         this.next();
       } catch {
         this.alert("用户名已存在");

@@ -97,20 +97,18 @@
 <script>
 import "vuetify";
 import { mapGetters, mapState } from "vuex";
-import { messages } from "../apis";
+import * as apis from "../apis";
 
 /**@typedef {import('../apis/messages').Message} Message */
 
 export default {
   name: "Chatroom",
 
-  data() {
-    return {
-      textInput: "",
-      topExposed: false,
-      messagesHead: 0,
-    };
-  },
+  data: () => ({
+    textInput: "",
+    topExposed: false,
+    messagesHead: 0,
+  }),
 
   props: {
     chatroomID: Number,
@@ -119,9 +117,10 @@ export default {
   computed: {
     ...mapState(["user"]),
     ...mapGetters(["users"]),
+    ...mapGetters("messages", { getRelatedMessages: "messages" }),
     /**@returns {Message[]} */
     allMessages() {
-      return this.$store.getters.messages(this.chatroomID);
+      return this.getRelatedMessages(this.chatroomID);
     },
     /**@returns {Message[]} */
     messages() {
@@ -159,7 +158,7 @@ export default {
      */
     send() {
       if (!this.textInput || !this.$refs.form.validate()) return;
-      messages.create({ text: this.textInput, chatroom: this.chatroomID });
+      apis.messages.create({ text: this.textInput, chatroom: this.chatroomID });
       this.textInput = "";
     },
     scrollToBottom() {
