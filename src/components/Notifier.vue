@@ -6,6 +6,8 @@
 
 <script>
 export default {
+  name: "Notifier",
+
   data: () => ({
     color: "info",
     text: "",
