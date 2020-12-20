@@ -150,7 +150,9 @@ export default {
 
   methods: {
     init() {
-      this.messagesHead = this.allMessages.length - 40;
+      const INIT_SIZE = 40;
+      const length = this.allMessages.length;
+      this.messagesHead = length > INIT_SIZE ? length - 40 : 0;
       this.scrollToBottom();
     },
     /**
