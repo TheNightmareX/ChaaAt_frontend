@@ -1,5 +1,5 @@
 <template>
-  <FriendOperationMenu>
+  <FriendsOperationMenu>
     <template v-slot="{ showMenu }">
       <v-list class="py-0">
         <v-subheader>好友</v-subheader>
@@ -43,18 +43,18 @@
         <slot name="bottom"></slot>
       </v-list>
     </template>
-  </FriendOperationMenu>
+  </FriendsOperationMenu>
 </template>
 
 <script>
 import * as apis from "../apis";
 import { mapGetters } from "vuex";
-import FriendOperationMenu from "./FriendOperationMenu";
+import FriendsOperationMenu from "./FriendsOperationMenu";
 
 export default {
-  name: "FriendList",
+  name: "FriendsList",
 
-  components: { FriendOperationMenu },
+  components: { FriendsOperationMenu },
 
   computed: {
     ...mapGetters("friendRelations", ["relations"]),

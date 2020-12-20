@@ -16,7 +16,7 @@
     </v-app-bar>
 
     <v-navigation-drawer v-model="navigationDrawerOpen" app clipped>
-      <FriendList @change="chatroomID = $event">
+      <FriendsList @change="chatroomID = $event">
         <template #bottom>
           <v-list-item>
             <v-list-item-title class="d-flex justify-space-around">
@@ -30,7 +30,7 @@
             </v-list-item-title>
           </v-list-item>
         </template>
-      </FriendList>
+      </FriendsList>
     </v-navigation-drawer>
 
     <v-main>
@@ -61,7 +61,7 @@ import ProfileMenu from "../../components/ProfileMenu";
 import Chatroom from "../../components/Chatroom";
 import RelationCreationDialog from "../../components/RelationCreationDialog";
 import Notifier from "../../components/Notifier";
-import FriendList from "../../components/FriendList";
+import FriendsList from "../../components/FriendsList";
 
 export default {
   components: {
@@ -69,7 +69,7 @@ export default {
     ProfileMenu,
     RelationCreationDialog,
     Notifier,
-    FriendList,
+    FriendsList,
   },
 
   data: () => ({

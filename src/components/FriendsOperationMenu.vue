@@ -17,7 +17,7 @@ import * as apis from "../apis";
 /**@typedef {import("../apis/friend-relations").Relation} Relation */
 
 export default {
-  name: "FriendOperationMenu",
+  name: "FriendsOperationMenu",
 
   data: () => ({
     /**@type {Relation} */
