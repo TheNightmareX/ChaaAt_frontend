@@ -52,7 +52,7 @@ export default new Vuex.Store({
       commit("auth", {
         user:
           username && password
-            ? await apis.auth.login(username, password)
+            ? await apis.auth.login({ username, password })
             : await apis.auth.current(),
       });
     },
@@ -114,12 +114,14 @@ export default new Vuex.Store({
             apis.messages.clearUpdations();
             let nextPage = 1;
             while (nextPage) {
-              const { next, results } = await apis.messages.list(nextPage);
+              const { next, results } = await apis.messages.list({
+                page: nextPage,
+              });
               next ? nextPage++ : (nextPage = false);
               commit("append", { messages: results });
             }
           } else {
-            const updations = await apis.messages.getUpdations(cancelToken);
+            const updations = await apis.messages.getUpdations({ cancelToken });
             commit("append", { messages: updations });
           }
         },
@@ -174,18 +176,18 @@ export default new Vuex.Store({
             apis.friendRelations.clearUpdations();
             let nextPage = 1;
             while (nextPage) {
-              const { next, results } = await apis.friendRelations.list(
-                nextPage
-              );
+              const { next, results } = await apis.friendRelations.list({
+                page: nextPage,
+              });
               next ? nextPage++ : (nextPage = false);
               commit("append", {
                 relations: results,
               });
             }
           } else {
-            const updations = await apis.friendRelations.getUpdations(
-              cancelToken
-            );
+            const updations = await apis.friendRelations.getUpdations({
+              cancelToken,
+            });
             for (const [action, value] of updations) {
               switch (action) {
                 case "save":

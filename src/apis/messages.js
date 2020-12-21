@@ -6,28 +6,28 @@ import axios from "axios";
 export default new (class {
   /**
    *
-   * @param {number} page
+   * @param {{ page: number }}
    * @returns {Promise<{ count: number, next: string, previous: string, results: Message[] }>}
    */
   @api
-  list(page) {
+  list({ page } = {}) {
     return axios.get("messages/", { params: { page } });
   }
   /**
    *
-   * @param {Message} message
+   * @param {{ message: Message }}
    */
   @api
-  create(message) {
+  create({ message }) {
     return axios.post("messages/", message);
   }
   /**
    *
-   * @param {import("axios").CancelToken} cancelToken
+   * @param {{ cancelToken: import("axios").CancelToken }}
    * @returns {Promise<Message[]>}
    */
   @api
-  getUpdations(cancelToken) {
+  getUpdations({ cancelToken = undefined } = {}) {
     return axios.get("messages/updates/", { cancelToken });
   }
   /**

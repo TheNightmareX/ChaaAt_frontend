@@ -40,7 +40,7 @@ export default {
       setTimeout(async () => {
         if (v != this.searchInput || this.loading) return;
         this.loading = true;
-        this.users = (await apis.auth.list(v)).results.map(
+        this.users = (await apis.auth.list({ search: v })).results.map(
           (user) => user.username
         );
         this.loading = false;
@@ -52,9 +52,9 @@ export default {
     async buildRelation(username) {
       try {
         this.loading = true;
-        const targetUser = (await apis.auth.retrieve(username)).id;
+        const targetUser = (await apis.auth.retrieve({ username })).id;
         try {
-          await apis.friendRelations.create(targetUser);
+          await apis.friendRelations.create({ targetUser });
           this.$emit("success");
         } catch {
           this.$emit("error", "联系人已存在或待通过");

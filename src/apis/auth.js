@@ -13,21 +13,20 @@ export default new (class {
   }
   /**
    *
-   * @param {string} username
+   * @param {{ username: string }}
    * @returns {User}
    */
   @api
-  retrieve(username) {
+  retrieve({ username }) {
     return axios.get(`users/${username}/`);
   }
   /**
    *
-   * @param {string} username
-   * @param {string} password
+   * @param {{ username: string, password: string }}
    * @returns {Promise<User>}
    */
   @api
-  login(username, password) {
+  login({ username, password }) {
     return axios.post("auth/", { username, password });
   }
   /**
@@ -44,16 +43,16 @@ export default new (class {
    * @returns {Promise<User>}
    */
   @api
-  signup(username, password) {
+  signup({ username, password }) {
     return axios.post("users/", { username, password });
   }
   /**
    *
-   * @param {string} search
+   * @param {{ search: string }}
    * @returns {Promise<{ count: number, previous: string, next: string, results: User[] }>}
    */
   @api
-  list(search = undefined) {
+  list({ search = undefined } = {}) {
     return axios.get("users/", { params: { search } });
   }
 })();

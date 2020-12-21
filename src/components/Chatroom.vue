@@ -160,7 +160,9 @@ export default {
      */
     send() {
       if (!this.textInput || !this.$refs.form.validate()) return;
-      apis.messages.create({ text: this.textInput, chatroom: this.chatroomID });
+      apis.messages.create({
+        message: { text: this.textInput, chatroom: this.chatroomID },
+      });
       this.textInput = "";
     },
     scrollToBottom() {

@@ -79,10 +79,10 @@ export default {
       this.menuOnRelation = relation;
     },
     accept(relation) {
-      apis.friendRelations.create(relation.user.id);
+      apis.friendRelations.create({ targetUser: relation.user.id });
     },
     destroy(relation) {
-      apis.friendRelations.destroy(relation.id);
+      apis.friendRelations.destroy({ id: relation.id });
     },
   },
 };

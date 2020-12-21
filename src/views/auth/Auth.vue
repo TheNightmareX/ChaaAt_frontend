@@ -88,7 +88,7 @@ export default {
       if (!this.$refs.form.validate()) return;
       try {
         this.loading = true;
-        await apis.auth.signup(username, password);
+        await apis.auth.signup({ username, password });
         await this.performLogin({ username, password });
         this.next();
       } catch {
