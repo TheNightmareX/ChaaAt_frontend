@@ -1,4 +1,4 @@
-import { api } from "./index";
+import { api, paginated } from "./index";
 import axios from "axios";
 
 /**@typedef {{ id: number, text: string, sender: number, chatroom: number, creationTime: string }} Message */
@@ -7,10 +7,11 @@ export default new (class {
   /**
    *
    * @param {{ page: number }}
-   * @returns {Promise<{ count: number, next: string, previous: string, results: Message[] }>}
+   * @returns {Promise<import(".").Paginated<Message>>}
    */
+  @paginated
   @api
-  list({ page } = {}) {
+  list({ page = undefined } = {}) {
     return axios.get("messages/", { params: { page } });
   }
   /**

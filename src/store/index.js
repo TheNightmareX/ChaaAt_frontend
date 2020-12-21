@@ -111,14 +111,12 @@ export default new Vuex.Store({
          */
         async sync({ state, commit }, { cancelToken = undefined } = {}) {
           if (!state.loaded) {
-            apis.messages.clearUpdations();
-            let nextPage = 1;
+            await apis.messages.clearUpdations();
+            let nextPage = () => apis.messages.list();
             while (nextPage) {
-              const { next, results } = await apis.messages.list({
-                page: nextPage,
-              });
-              next ? nextPage++ : (nextPage = false);
+              const { next, results } = await nextPage();
               commit("append", { messages: results });
+              nextPage = next;
             }
           } else {
             const updations = await apis.messages.getUpdations({ cancelToken });
@@ -174,15 +172,11 @@ export default new Vuex.Store({
         async sync({ state, commit }, { cancelToken = undefined } = {}) {
           if (!state.loaded) {
             apis.friendRelations.clearUpdations();
-            let nextPage = 1;
+            let nextPage = () => apis.friendRelations.list();
             while (nextPage) {
-              const { next, results } = await apis.friendRelations.list({
-                page: nextPage,
-              });
-              next ? nextPage++ : (nextPage = false);
-              commit("append", {
-                relations: results,
-              });
+              const { next, results } = await nextPage();
+              commit("append", { relations: results });
+              nextPage = next;
             }
           } else {
             const updations = await apis.friendRelations.getUpdations({

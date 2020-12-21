@@ -1,4 +1,4 @@
-import { api } from "./index";
+import { api, paginated } from "./index";
 import axios from "axios";
 
 /**@typedef {{ id: number, username: string }} User */
@@ -48,11 +48,12 @@ export default new (class {
   }
   /**
    *
-   * @param {{ search: string }}
-   * @returns {Promise<{ count: number, previous: string, next: string, results: User[] }>}
+   * @param {{ search: string, page: number }}
+   * @returns {Promise<import(".").Paginated<User>>}
    */
+  @paginated
   @api
-  list({ search = undefined } = {}) {
-    return axios.get("users/", { params: { search } });
+  list({ search = undefined, page = undefined } = {}) {
+    return axios.get("users/", { params: { search, page } });
   }
 })();

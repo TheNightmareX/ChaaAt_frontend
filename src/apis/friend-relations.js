@@ -1,4 +1,4 @@
-import { api } from "./index";
+import { api, paginated } from "./index";
 import axios from "axios";
 
 /**@typedef {import('./auth').User} User  */
@@ -17,8 +17,9 @@ export default new (class {
   /**
    *
    * @param {{ page: number }}
-   * @returns {Promise<{ count: number, next: string, previous: string, results: Relation[] }>}
+   * @returns {Promise<import(".").Paginated<Relation>>}
    */
+  @paginated
   @api
   list({ page = undefined } = {}) {
     return axios.get("friend-relations/", { params: { page } });
