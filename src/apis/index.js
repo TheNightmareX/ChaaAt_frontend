@@ -36,13 +36,11 @@ function convertFieldCase(obj, to) {
  * A decorator which makes a ordinary method an async method,
  * provides auto case conversions and extract `data` field from
  * an `AxiosResponse` the method returns.
- * @param {Object} target
- * @param {string} name
- * @param {PropertyDescriptor} descriptor
+ * @type {MethodDecorator}
  */
-export function api(target, name, descriptor) {
+export function api(target, key, descriptor) {
   /**@type {(...) => Promise<import("axios").AxiosResponse>} */
-  const fn = target[name];
+  const fn = descriptor.value;
   descriptor.value = async function(...camelArgs) {
     const snakeArgs = camelArgs.map((arg) => convertFieldCase(arg, "snake"));
     const snakeReturns = (await fn(...snakeArgs)).data;
@@ -56,12 +54,9 @@ export function api(target, name, descriptor) {
  * Make an api method which returns paginated data easier to use by
  * converting the `next` and `previous` fields into functions.
  * Call these two methods without any params to get another page.
- * @param {Object} target
- * @param {string} name
- * @param {PropertyDescriptor} descriptor
- * @example
+ * @type {MethodDecorator}
  */
-export function paginated(target, name, descriptor) {
+export function paginated(target, key, descriptor) {
   /**
    *
    * @param {(...) => Promise<PageOf<any>>} fn
