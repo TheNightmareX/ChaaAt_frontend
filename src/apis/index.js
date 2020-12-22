@@ -8,7 +8,7 @@ export { default as auth } from "./auth";
 export { default as friendRelations } from "./friend-relations";
 export { default as messages } from "./messages";
 
-/**@template T @typedef {{ count: number, previous: () => Promise<Paginated<T>> , next: () => Promise<Paginated<T>>, results: T[]}} Paginated */
+/**@template T @typedef {{ count: number, previous: () => Promise<PageOf<T>> , next: () => Promise<PageOf<T>>, results: T[]}} PageOf */
 /**@typedef {number | 'last'} PageNum */
 
 /**
@@ -64,7 +64,7 @@ export function api(target, name, descriptor) {
 export function paginated(target, name, descriptor) {
   /**
    *
-   * @param {(...) => Promise<Paginated<any>>} fn
+   * @param {(...) => Promise<PageOf<any>>} fn
    */
   function wrap(fn) {
     return async function(args) {

@@ -49,7 +49,7 @@ export default new (class {
   /**
    *
    * @param {{ search: string, page: import(".").PageNum }}
-   * @returns {Promise<import(".").Paginated<User>>}
+   * @returns {Promise<import(".").PageOf<User>>}
    */
   @paginated
   @api

@@ -7,7 +7,7 @@ export default new (class {
   /**
    *
    * @param {{ page: import(".").PageNum }}
-   * @returns {Promise<import(".").Paginated<Message>>}
+   * @returns {Promise<import(".").PageOf<Message>>}
    */
   @paginated
   @api
