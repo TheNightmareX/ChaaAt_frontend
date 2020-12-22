@@ -99,7 +99,7 @@ import "vuetify";
 import { mapGetters, mapState } from "vuex";
 import * as apis from "../apis";
 
-/**@typedef {import('../apis/messages').Message} Message */
+/**@typedef {import('../store').ComputedMessage} ComputedMessage */
 
 export default {
   name: "Chatroom",
@@ -118,11 +118,11 @@ export default {
     ...mapState(["user"]),
     ...mapGetters(["users"]),
     ...mapGetters("messages", { getRelatedMessages: "messages" }),
-    /**@returns {Message[]} */
+    /**@returns {ComputedMessage[]} */
     allMessages() {
       return this.getRelatedMessages(this.chatroomID);
     },
-    /**@returns {Message[]} */
+    /**@returns {ComputedMessage[]} */
     messages() {
       return this.allMessages.slice(this.messagesHead);
     },

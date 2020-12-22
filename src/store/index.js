@@ -6,6 +6,9 @@ import * as apis from "../apis";
 /**@typedef {import("../apis/messages").Message} Message */
 /**@typedef {import("../apis/friend-relations").Relation} FriendRelation */
 
+/**@typedef {{ creationTime: string, hasTimeGap: boolean, isDifferentSender: boolean, id: number, text: string, sender: number, chatroom: number }} ComputedMessage */
+/**@typedef {{ id: number, user: User, asSender: boolean, chatroom: number }} ComputedFriendRelation */
+
 Vue.use(Vuex);
 
 export default new Vuex.Store({
