@@ -48,7 +48,7 @@ export default new (class {
   }
   /**
    *
-   * @param {{ search: string, page: number }}
+   * @param {{ search: string, page: import(".").PageNum }}
    * @returns {Promise<import(".").Paginated<User>>}
    */
   @paginated

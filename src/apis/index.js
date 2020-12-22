@@ -9,6 +9,7 @@ export { default as friendRelations } from "./friend-relations";
 export { default as messages } from "./messages";
 
 /**@template T @typedef {{ count: number, previous: () => Promise<Paginated<T>> , next: () => Promise<Paginated<T>>, results: T[]}} Paginated */
+/**@typedef {number | 'last'} PageNum */
 
 /**
  *

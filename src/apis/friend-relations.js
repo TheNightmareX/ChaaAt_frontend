@@ -16,7 +16,7 @@ export default new (class {
   }
   /**
    *
-   * @param {{ page: number }}
+   * @param {{ page: import(".").PageNum }}
    * @returns {Promise<import(".").Paginated<Relation>>}
    */
   @paginated

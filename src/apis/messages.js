@@ -6,7 +6,7 @@ import axios from "axios";
 export default new (class {
   /**
    *
-   * @param {{ page: number }}
+   * @param {{ page: import(".").PageNum }}
    * @returns {Promise<import(".").Paginated<Message>>}
    */
   @paginated
