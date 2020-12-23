@@ -78,7 +78,7 @@ export default {
     menuX: 0,
     menuY: 0,
     menuOnRelation: undefined,
-    tick: 0,
+    tick: false,
     tickHandler: undefined,
   }),
 
@@ -137,7 +137,7 @@ export default {
 
   created() {
     this.tickHandler = setInterval(() => {
-      this.tick++;
+      this.tick = !this.tick;
     }, 1000);
   },
 
