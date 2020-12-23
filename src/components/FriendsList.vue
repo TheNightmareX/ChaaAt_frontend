@@ -62,6 +62,8 @@
 import * as apis from "../apis";
 import { mapGetters } from "vuex";
 
+/**@typedef {import("../store").ComputedMessage} Message */
+
 export default {
   name: "FriendsList",
 
@@ -75,17 +77,18 @@ export default {
   computed: {
     ...mapGetters("friendRelations", ["relations"]),
     ...mapGetters("messages", ["messagesMapping"]),
-    /**@returns {Object<number, import("../store").ComputedMessage>} */
+    /**@returns {Object<number, Message>} */
     lastMessageMapping() {
       const mapping = {};
       /**@type {import("../store").ComputedFriendRelation[]} */
       const relations = this.relations.accepted;
-      relations.forEach(
-        (relation) =>
-          (mapping[relation.id] =
-            this.messagesMapping[relation.chatroom]?.slice(-1)?.[0].text ??
-            "...")
-      );
+      relations.forEach((relation) => {
+        /**@type {Message} */
+        const message = this.messagesMapping[relation.chatroom]?.slice(-1)?.[0];
+        mapping[relation.id] = message
+          ? `${message.creationTime.split(" ")[1]} > ${message.text}`
+          : "...";
+      });
 
       return mapping;
     },
