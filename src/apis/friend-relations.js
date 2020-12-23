@@ -37,7 +37,7 @@ export default new (class {
    * @returns {Promise<['save' | 'delete', Relation | number][]>}
    */
   @api
-  getUpdations({ cancelToken = undefined } = {}) {
+  getUpdations({ cancel_token: cancelToken = undefined } = {}) {
     return axios.get("friend-relations/updates/", { cancelToken });
   }
   /**

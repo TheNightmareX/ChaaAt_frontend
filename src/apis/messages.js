@@ -28,7 +28,7 @@ export default new (class {
    * @returns {Promise<Message[]>}
    */
   @api
-  getUpdations({ cancelToken = undefined } = {}) {
+  getUpdations({ cancel_token: cancelToken = undefined } = {}) {
     return axios.get("messages/updates/", { cancelToken });
   }
   /**
