@@ -17,12 +17,18 @@
 
     <v-list-item-group>
       <v-list-item
+        two-line
         v-for="relation of relations.accepted"
         :key="relation.id"
         @click="$emit('change', relation.chatroom)"
         @contextmenu.prevent="showMenu($event, relation)"
       >
-        <v-list-item-title>{{ relation.user.username }}</v-list-item-title>
+        <v-list-item-content>
+          <v-list-item-title>{{ relation.user.username }}</v-list-item-title>
+          <v-list-item-subtitle>{{
+            lastMessageMapping[relation.id]
+          }}</v-list-item-subtitle>
+        </v-list-item-content>
       </v-list-item>
     </v-list-item-group>
 
@@ -68,6 +74,21 @@ export default {
 
   computed: {
     ...mapGetters("friendRelations", ["relations"]),
+    ...mapGetters("messages", ["messagesMapping"]),
+    /**@returns {Object<number, import("../store").ComputedMessage>} */
+    lastMessageMapping() {
+      const mapping = {};
+      /**@type {import("../store").ComputedFriendRelation[]} */
+      const relations = this.relations.accepted;
+      relations.forEach(
+        (relation) =>
+          (mapping[relation.id] =
+            this.messagesMapping[relation.chatroom]?.slice(-1)?.[0].text ??
+            "...")
+      );
+
+      return mapping;
+    },
   },
 
   methods: {
