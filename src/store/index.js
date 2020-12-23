@@ -6,7 +6,7 @@ import * as apis from "../apis";
 /**@typedef {import("../apis/messages").Message} Message */
 /**@typedef {import("../apis/friend-relations").Relation} FriendRelation */
 
-/**@typedef {{ creationTime: string, hasTimeGap: boolean, isDifferentSender: boolean, id: number, text: string, sender: number, chatroom: number }} ComputedMessage */
+/**@typedef {{ creationTime: Date, hasTimeGap: boolean, isDifferentSender: boolean, id: number, text: string, sender: number, chatroom: number }} ComputedMessage */
 /**@typedef {{ id: number, user: User, asSender: boolean, chatroom: number }} ComputedFriendRelation */
 
 Vue.use(Vuex);
@@ -93,15 +93,13 @@ export default new Vuex.Store({
             computedMapping[chatroomID] = messages.map((message, index) => {
               const INTERVAL = 60000 * 1;
               const previous = messages[index - 1];
-              const creation = new Date(message.creationTime);
+              const creationTime = new Date(message.creationTime);
               return {
                 ...message,
-                creationTime: creation.toLocaleString(undefined, {
-                  hour12: false,
-                }),
+                creationTime: creationTime,
                 hasTimeGap:
                   !previous ||
-                  creation - new Date(previous.creationTime) > INTERVAL,
+                  creationTime - new Date(previous.creationTime) > INTERVAL,
                 isDifferentSender:
                   !previous || message.sender != previous.sender,
               };

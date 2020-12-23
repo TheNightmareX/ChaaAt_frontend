@@ -59,11 +59,11 @@
 </template>
 
 <script>
+import * as timeago from "timeago.js";
 import * as apis from "../apis";
 import { mapGetters } from "vuex";
 
 /**@typedef {import("../store").ComputedMessage} Message */
-
 export default {
   name: "FriendsList",
 
@@ -72,13 +72,17 @@ export default {
     menuX: 0,
     menuY: 0,
     menuOnRelation: undefined,
+    tick: 0,
+    tickHandler: undefined,
   }),
 
   computed: {
     ...mapGetters("friendRelations", ["relations"]),
     ...mapGetters("messages", ["messagesMapping"]),
-    /**@returns {Object<number, Message>} */
+    /**@returns {Object<number, string>} */
     lastMessageMapping() {
+      this.tick;
+
       const mapping = {};
       /**@type {import("../store").ComputedFriendRelation[]} */
       const relations = this.relations.accepted;
@@ -86,7 +90,7 @@ export default {
         /**@type {Message} */
         const message = this.messagesMapping[relation.chatroom]?.slice(-1)?.[0];
         mapping[relation.id] = message
-          ? `${message.creationTime.split(" ")[1]} > ${message.text}`
+          ? `${timeago.format(message.creationTime, "zh_CN")} ${message.text}`
           : "...";
       });
 
@@ -108,6 +112,16 @@ export default {
     destroy(relation) {
       apis.friendRelations.destroy({ id: relation.id });
     },
+  },
+
+  created() {
+    this.tickHandler = setInterval(() => {
+      this.tick++;
+    }, 1000);
+  },
+
+  destroyed() {
+    clearInterval(this.tickHandler);
   },
 };
 </script>

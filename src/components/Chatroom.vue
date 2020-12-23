@@ -28,7 +28,7 @@
             class="text-caption text--secondary"
             justify="center"
           >
-            {{ creationTime }}
+            {{ creationTime.toLocaleString(undefined, { hour12: false }) }}
           </v-row>
           <v-row
             v-if="isDifferentSender || hasTimeGap"
