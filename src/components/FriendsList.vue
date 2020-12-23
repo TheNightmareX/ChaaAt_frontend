@@ -18,7 +18,7 @@
     <v-list-item-group>
       <v-list-item
         two-line
-        v-for="relation of relations.accepted"
+        v-for="relation of sortedAcceptedRelations"
         :key="relation.id"
         @click="$emit('change', relation.chatroom)"
         @contextmenu.prevent="showMenu($event, relation)"
@@ -100,6 +100,21 @@ export default {
       });
 
       return mapping;
+    },
+    sortedAcceptedRelations() {
+      /**@type {Relation[]} */
+      const relations = this.relations.accepted;
+      /**@type {Object<number, Message[]>} */
+      const messagesMapping = this.messagesMapping;
+
+      return relations.sort((rA, rB) => {
+        const [timeA, timeB] = [rA, rB].map(
+          (r) =>
+            messagesMapping[r.chatroom]?.slice(-1)?.[0]?.creationTime ??
+            new Date(0)
+        );
+        return timeB - timeA;
+      });
     },
   },
 
