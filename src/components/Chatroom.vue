@@ -20,7 +20,7 @@
             hasTimeGap,
             creationTime,
             isDifferentSender,
-          } of messages"
+          } of renderedMessages"
           :key="id"
         >
           <v-row
@@ -117,14 +117,14 @@ export default {
   computed: {
     ...mapState(["user"]),
     ...mapGetters(["users"]),
-    ...mapGetters("messages", { getRelatedMessages: "messages" }),
+    ...mapGetters("messages", ["messagesMapping"]),
     /**@returns {ComputedMessage[]} */
-    allMessages() {
-      return this.getRelatedMessages(this.chatroomID);
+    relatedMessages() {
+      return this.messagesMapping[this.chatroomID] ?? [];
     },
     /**@returns {ComputedMessage[]} */
-    messages() {
-      return this.allMessages.slice(this.messagesHead);
+    renderedMessages() {
+      return this.relatedMessages.slice(this.messagesHead);
     },
     /**@returns {boolean} */
     autoGrow() {
@@ -136,7 +136,7 @@ export default {
     chatroomID() {
       this.init();
     },
-    allMessages() {
+    relatedMessages() {
       this.scrollToBottom();
     },
     async topExposed(exposed) {
@@ -151,7 +151,7 @@ export default {
   methods: {
     init() {
       const INIT_SIZE = 40;
-      const length = this.allMessages.length;
+      const length = this.relatedMessages.length;
       this.messagesHead = length > INIT_SIZE ? length - 40 : 0;
       this.scrollToBottom();
     },

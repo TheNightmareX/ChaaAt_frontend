@@ -73,17 +73,26 @@ export default new Vuex.Store({
         loaded: false,
       },
       getters: {
-        messages(state) {
-          state.messages;
-          return (chatroomID) => {
-            /**@type {Message[]} */
-            const all = Object.values(state.messages);
-            const filtered = all.filter(
-              (message) => message.chatroom == chatroomID
-            );
-            const computed = filtered.map((message, index) => {
+        messagesMapping(state) {
+          /**@type {Message[]} */
+          const messages = Object.values(state.messages);
+
+          /**@type {Object<number, Message[]>} */
+          const mapping = {};
+          messages.forEach((msg) => {
+            const key = msg.chatroom;
+            mapping[key] = mapping[key] ?? [];
+            mapping[key].push(msg);
+          });
+
+          /**@type {Object<number, ComputedMessage>} */
+          const computedMapping = {};
+          /**@type {[number, Message][]} */
+          const entries = Object.entries(mapping);
+          entries.forEach(([chatroomID, messages]) => {
+            computedMapping[chatroomID] = messages.map((message, index) => {
               const INTERVAL = 60000 * 1;
-              const previous = filtered[index - 1];
+              const previous = messages[index - 1];
               const creation = new Date(message.creationTime);
               return {
                 ...message,
@@ -97,8 +106,9 @@ export default new Vuex.Store({
                   !previous || message.sender != previous.sender,
               };
             });
-            return computed;
-          };
+          });
+
+          return computedMapping;
         },
       },
       mutations: {
