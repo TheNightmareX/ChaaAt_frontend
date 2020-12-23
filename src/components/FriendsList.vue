@@ -14,26 +14,27 @@
     </v-menu>
 
     <v-subheader>好友</v-subheader>
-
     <v-list-item-group>
-      <v-list-item
-        two-line
-        v-for="relation of sortedAcceptedRelations"
-        :key="relation.id"
-        @click="$emit('change', relation.chatroom)"
-        @contextmenu.prevent="showMenu($event, relation)"
-      >
-        <v-list-item-content>
-          <v-list-item-title>{{ relation.user.username }}</v-list-item-title>
-          <v-list-item-subtitle
-            v-for="[i, content] in latestMessageDisplayMapping[
-              relation.id
-            ].entries()"
-            :key="i"
-            >{{ content }}</v-list-item-subtitle
-          >
-        </v-list-item-content>
-      </v-list-item>
+      <transition-group>
+        <v-list-item
+          two-line
+          v-for="relation of sortedAcceptedRelations"
+          :key="relation.id"
+          @click="$emit('change', relation.chatroom)"
+          @contextmenu.prevent="showMenu($event, relation)"
+        >
+          <v-list-item-content>
+            <v-list-item-title>{{ relation.user.username }}</v-list-item-title>
+            <v-list-item-subtitle
+              v-for="[i, content] in latestMessageDisplayMapping[
+                relation.id
+              ].entries()"
+              :key="i"
+              >{{ content }}</v-list-item-subtitle
+            >
+          </v-list-item-content>
+        </v-list-item>
+      </transition-group>
     </v-list-item-group>
 
     <v-subheader v-if="relations.pending.length >= 1">待处理</v-subheader>
@@ -145,3 +146,9 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.v-move {
+  transition: all 0.2s;
+}
+</style>
