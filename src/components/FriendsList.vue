@@ -25,9 +25,11 @@
       >
         <v-list-item-content>
           <v-list-item-title>{{ relation.user.username }}</v-list-item-title>
-          <v-list-item-subtitle>{{
-            lastMessageMapping[relation.id]
-          }}</v-list-item-subtitle>
+          <v-list-item-subtitle
+            v-for="[i, content] in lastMessageMapping[relation.id].entries()"
+            :key="i"
+            >{{ content }}</v-list-item-subtitle
+          >
         </v-list-item-content>
       </v-list-item>
     </v-list-item-group>
@@ -79,7 +81,7 @@ export default {
   computed: {
     ...mapGetters("friendRelations", ["relations"]),
     ...mapGetters("messages", ["messagesMapping"]),
-    /**@returns {Object<number, string>} */
+    /**@returns {Object<number, [string, string]>} */
     lastMessageMapping() {
       this.tick;
 
@@ -90,8 +92,8 @@ export default {
         /**@type {Message} */
         const message = this.messagesMapping[relation.chatroom]?.slice(-1)?.[0];
         mapping[relation.id] = message
-          ? `${timeago.format(message.creationTime, "zh_CN")} ${message.text}`
-          : "...";
+          ? [message.text, timeago.format(message.creationTime, "zh_CN")]
+          : ["...", "..."];
       });
 
       return mapping;
