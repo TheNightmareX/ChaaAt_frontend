@@ -26,7 +26,9 @@
         <v-list-item-content>
           <v-list-item-title>{{ relation.user.username }}</v-list-item-title>
           <v-list-item-subtitle
-            v-for="[i, content] in lastMessageMapping[relation.id].entries()"
+            v-for="[i, content] in latestMessageDisplayMapping[
+              relation.id
+            ].entries()"
             :key="i"
             >{{ content }}</v-list-item-subtitle
           >
@@ -66,6 +68,7 @@ import * as apis from "../apis";
 import { mapGetters } from "vuex";
 
 /**@typedef {import("../store").ComputedMessage} Message */
+/**@typedef {import("../store").ComputedFriendRelation} Relation */
 export default {
   name: "FriendsList",
 
@@ -82,11 +85,11 @@ export default {
     ...mapGetters("friendRelations", ["relations"]),
     ...mapGetters("messages", ["messagesMapping"]),
     /**@returns {Object<number, [string, string]>} */
-    lastMessageMapping() {
+    latestMessageDisplayMapping() {
       this.tick;
 
       const mapping = {};
-      /**@type {import("../store").ComputedFriendRelation[]} */
+      /**@type {Relation[]} */
       const relations = this.relations.accepted;
       relations.forEach((relation) => {
         /**@type {Message} */
