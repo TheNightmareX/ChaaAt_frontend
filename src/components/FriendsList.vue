@@ -6,7 +6,20 @@
       absolute
       v-model="menuShown"
     >
-      <v-list dense min-width="200">
+      <v-list v-if="menuShown" dense min-width="200">
+        <v-list-item
+          @click="
+            (fixedMapping[menuOnRelation.chatroom] ? $delete : $set)(
+              fixedMapping,
+              menuOnRelation.chatroom,
+              true
+            )
+          "
+        >
+          <v-list-item-title>{{
+            fixedMapping[menuOnRelation.chatroom] ? "取消固定" : "固定顶部"
+          }}</v-list-item-title>
+        </v-list-item>
         <v-list-item @click="destroy(menuOnRelation)">
           <v-list-item-title>删除好友</v-list-item-title>
         </v-list-item>
@@ -24,7 +37,10 @@
           @contextmenu.prevent="showMenu($event, relation)"
         >
           <v-list-item-content>
-            <v-list-item-title>{{ relation.user.username }}</v-list-item-title>
+            <v-list-item-title
+              :class="fixedMapping[relation.chatroom] ? 'secondary--text' : ''"
+              >{{ relation.user.username }}</v-list-item-title
+            >
             <v-list-item-subtitle
               v-for="[i, content] in latestMessageDisplayMapping[
                 relation.id
@@ -70,6 +86,7 @@ import { mapGetters } from "vuex";
 
 /**@typedef {import("../store").ComputedMessage} Message */
 /**@typedef {import("../store").ComputedFriendRelation} Relation */
+
 export default {
   name: "FriendsList",
 
@@ -80,6 +97,7 @@ export default {
     menuOnRelation: undefined,
     tick: false,
     tickHandler: undefined,
+    fixedMapping: {},
   }),
 
   computed: {
@@ -109,10 +127,11 @@ export default {
       const messagesMapping = this.messagesMapping;
 
       return relations.sort((rA, rB) => {
-        const [timeA, timeB] = [rA, rB].map(
-          (r) =>
-            messagesMapping[r.chatroom]?.slice(-1)?.[0]?.creationTime ??
-            new Date(0)
+        const [timeA, timeB] = [rA, rB].map((r) =>
+          this.fixedMapping[r.chatroom]
+            ? new Date()
+            : messagesMapping[r.chatroom]?.slice(-1)?.[0]?.creationTime ??
+              new Date(0)
         );
         return timeB - timeA;
       });
