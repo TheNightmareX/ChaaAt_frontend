@@ -1,81 +1,86 @@
 <template>
-  <v-list class="py-0">
-    <v-menu
-      :position-x="menuX"
-      :position-y="menuY"
-      absolute
-      v-model="menuShown"
-    >
-      <v-list v-if="menuShown" dense min-width="200">
-        <v-list-item
-          @click="
-            (fixedMapping[menuOnRelation.chatroom] ? $delete : $set)(
-              fixedMapping,
-              menuOnRelation.chatroom,
-              true
-            )
-          "
-        >
-          <v-list-item-title>{{
-            fixedMapping[menuOnRelation.chatroom] ? "取消固定" : "固定顶部"
-          }}</v-list-item-title>
+  <v-list class="py-0 d-flex flex-column fill-height">
+    <v-sheet class="flex-grow-1" style="height: 0; overflow: auto">
+      <v-menu
+        :position-x="menuX"
+        :position-y="menuY"
+        absolute
+        v-model="menuShown"
+      >
+        <v-list v-if="menuShown" dense min-width="200">
+          <v-list-item
+            @click="
+              (fixedMapping[menuOnRelation.chatroom] ? $delete : $set)(
+                fixedMapping,
+                menuOnRelation.chatroom,
+                true
+              )
+            "
+          >
+            <v-list-item-title>{{
+              fixedMapping[menuOnRelation.chatroom] ? "取消固定" : "固定顶部"
+            }}</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="destroy(menuOnRelation)">
+            <v-list-item-title>删除好友</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
+      <v-subheader>好友</v-subheader>
+      <v-list-item-group>
+        <transition-group>
+          <v-list-item
+            two-line
+            v-for="relation of sortedAcceptedRelations"
+            :key="relation.id"
+            @click="$emit('change', relation.chatroom)"
+            @contextmenu.prevent="showMenu($event, relation)"
+          >
+            <v-list-item-content>
+              <v-list-item-title
+                :class="
+                  fixedMapping[relation.chatroom] ? 'secondary--text' : ''
+                "
+                >{{ relation.user.username }}</v-list-item-title
+              >
+              <v-list-item-subtitle
+                v-for="[i, content] in latestMessageDisplayMapping[
+                  relation.id
+                ].entries()"
+                :key="i"
+                >{{ content }}</v-list-item-subtitle
+              >
+            </v-list-item-content>
+          </v-list-item>
+        </transition-group>
+      </v-list-item-group>
+
+      <v-subheader v-if="relations.pending.length >= 1">待处理</v-subheader>
+
+      <v-list-group v-for="relation of relations.pending" :key="relation.id">
+        <template #activator>
+          <v-list-item-title>
+            {{ relation.user.username }}
+          </v-list-item-title>
+        </template>
+        <v-list-item>
+          <v-list-item-title class="d-flex justify-space-around">
+            <v-btn icon @click="destroy(relation)">
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+            <v-btn v-if="!relation.asSender" icon @click="accept(relation)">
+              <v-icon>mdi-check</v-icon>
+            </v-btn>
+          </v-list-item-title>
         </v-list-item>
-        <v-list-item @click="destroy(menuOnRelation)">
-          <v-list-item-title>删除好友</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
+      </v-list-group>
+    </v-sheet>
 
-    <v-subheader>好友</v-subheader>
-    <v-list-item-group>
-      <transition-group>
-        <v-list-item
-          two-line
-          v-for="relation of sortedAcceptedRelations"
-          :key="relation.id"
-          @click="$emit('change', relation.chatroom)"
-          @contextmenu.prevent="showMenu($event, relation)"
-        >
-          <v-list-item-content>
-            <v-list-item-title
-              :class="fixedMapping[relation.chatroom] ? 'secondary--text' : ''"
-              >{{ relation.user.username }}</v-list-item-title
-            >
-            <v-list-item-subtitle
-              v-for="[i, content] in latestMessageDisplayMapping[
-                relation.id
-              ].entries()"
-              :key="i"
-              >{{ content }}</v-list-item-subtitle
-            >
-          </v-list-item-content>
-        </v-list-item>
-      </transition-group>
-    </v-list-item-group>
-
-    <v-subheader v-if="relations.pending.length >= 1">待处理</v-subheader>
-
-    <v-list-group v-for="relation of relations.pending" :key="relation.id">
-      <template #activator>
-        <v-list-item-title>
-          {{ relation.user.username }}
-        </v-list-item-title>
-      </template>
-      <v-list-item>
-        <v-list-item-title class="d-flex justify-space-around">
-          <v-btn icon @click="destroy(relation)">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-          <v-btn v-if="!relation.asSender" icon @click="accept(relation)">
-            <v-icon>mdi-check</v-icon>
-          </v-btn>
-        </v-list-item-title>
-      </v-list-item>
-    </v-list-group>
-
-    <v-divider></v-divider>
-
-    <slot name="bottom"></slot>
+    <v-sheet>
+      <v-divider></v-divider>
+      <slot></slot>
+    </v-sheet>
   </v-list>
 </template>
 

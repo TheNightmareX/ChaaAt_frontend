@@ -17,19 +17,17 @@
 
     <v-navigation-drawer v-model="navigationDrawerOpen" app clipped>
       <FriendsList @change="chatroomID = $event">
-        <template #bottom>
-          <v-list-item>
-            <v-list-item-title class="d-flex justify-space-around">
-              <RelationCreationDialog @error="alert($event)">
-                <template v-slot="{ attrs, on }">
-                  <v-btn icon v-bind="attrs" v-on="on">
-                    <v-icon>mdi-plus</v-icon>
-                  </v-btn>
-                </template>
-              </RelationCreationDialog>
-            </v-list-item-title>
-          </v-list-item>
-        </template>
+        <v-list-item>
+          <v-list-item-title class="d-flex justify-space-around">
+            <RelationCreationDialog @error="alert($event)">
+              <template v-slot="{ attrs, on }">
+                <v-btn icon v-bind="attrs" v-on="on">
+                  <v-icon>mdi-plus</v-icon>
+                </v-btn>
+              </template>
+            </RelationCreationDialog>
+          </v-list-item-title>
+        </v-list-item>
       </FriendsList>
     </v-navigation-drawer>
 
