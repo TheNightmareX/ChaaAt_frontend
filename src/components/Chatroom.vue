@@ -49,7 +49,7 @@
       </v-container>
     </v-sheet>
     <v-form ref="form">
-      <v-sheet class="d-none d-sm-block">
+      <v-sheet v-if="$vuetify.breakpoint.smAndUp">
         <v-toolbar color="primary" dense flat></v-toolbar>
         <v-textarea
           v-model="textInput"
@@ -69,7 +69,7 @@
           @keydown.enter.ctrl="send"
         ></v-textarea>
       </v-sheet>
-      <v-sheet color="primary" class="d-sm-none" style="overflow: hidden">
+      <v-sheet v-else color="primary" style="overflow: hidden">
         <v-container>
           <v-row no-gutters>
             <v-col class="py-0">
