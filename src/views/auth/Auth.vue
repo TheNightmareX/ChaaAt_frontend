@@ -70,10 +70,10 @@ export default {
      * @param {string} msg
      */
     alert(msg) {
-      this.$refs.notifier.notify(msg, "warning");
+      this.$refs["notifier"].notify(msg, "warning");
     },
     async login({ username, password }) {
-      if (!this.$refs.form.validate()) return;
+      if (!this.$refs["form"].validate()) return;
       try {
         this.loading = true;
         await this.performLogin({ username, password });
@@ -85,7 +85,7 @@ export default {
       }
     },
     async signup({ username, password }) {
-      if (!this.$refs.form.validate()) return;
+      if (!this.$refs["form"].validate()) return;
       try {
         this.loading = true;
         await apis.auth.signup({ username, password });

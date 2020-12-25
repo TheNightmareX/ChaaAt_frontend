@@ -158,7 +158,7 @@ export default {
      * Create a message, and the syncer will update messages automatically.
      */
     send() {
-      if (!this.textInput || !this.$refs.form.validate()) return;
+      if (!this.textInput || !this.$refs["form"].validate()) return;
       apis.messages.create({
         message: { text: this.textInput, chatroom: this.chatroomID },
       });

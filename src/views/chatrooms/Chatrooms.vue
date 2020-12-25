@@ -126,7 +126,7 @@ export default {
      * @param {string} msg
      */
     alert(msg) {
-      this.$refs.notifier.notify(msg, "warning");
+      this.$refs["notifier"].notify(msg, "warning");
     },
   },
 
