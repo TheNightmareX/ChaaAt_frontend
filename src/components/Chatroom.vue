@@ -76,7 +76,6 @@
               <v-textarea
                 v-model="textInput"
                 no-resize
-                autofocus
                 rows="1"
                 :auto-grow="autoGrow"
                 solo

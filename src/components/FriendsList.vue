@@ -1,31 +1,28 @@
 <template>
   <v-list class="py-0 d-flex flex-column fill-height">
     <v-sheet class="flex-grow-1" style="height: 0; overflow: auto">
-      <v-menu
-        :position-x="menuX"
-        :position-y="menuY"
-        absolute
-        v-model="menuShown"
-      >
-        <v-list v-if="menuShown" dense min-width="200">
-          <v-list-item
-            @click="
-              (fixedMapping[menuOnRelation.chatroom] ? $delete : $set)(
-                fixedMapping,
-                menuOnRelation.chatroom,
-                true
-              )
-            "
-          >
-            <v-list-item-title>{{
-              fixedMapping[menuOnRelation.chatroom] ? "取消固定" : "固定顶部"
-            }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item @click="destroy(menuOnRelation)">
-            <v-list-item-title>删除好友</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+      <ContextMenu ref="menu">
+        <template v-slot="{ shown }">
+          <v-list v-if="shown" dense min-width="200">
+            <v-list-item
+              @click="
+                (fixedMapping[menuOnRelation.chatroom] ? $delete : $set)(
+                  fixedMapping,
+                  menuOnRelation.chatroom,
+                  true
+                )
+              "
+            >
+              <v-list-item-title>{{
+                fixedMapping[menuOnRelation.chatroom] ? "取消固定" : "固定顶部"
+              }}</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="destroy(menuOnRelation)">
+              <v-list-item-title>删除好友</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </template>
+      </ContextMenu>
 
       <v-subheader>好友</v-subheader>
       <v-list-item-group>
@@ -88,6 +85,7 @@
 import * as timeago from "timeago.js";
 import * as apis from "../apis";
 import { mapGetters } from "vuex";
+import ContextMenu from "./ContextMenu";
 
 /**@typedef {import("../store").ComputedMessage} Message */
 /**@typedef {import("../store").ComputedFriendRelation} Relation */
@@ -95,10 +93,9 @@ import { mapGetters } from "vuex";
 export default {
   name: "FriendsList",
 
+  components: { ContextMenu },
+
   data: () => ({
-    menuShown: false,
-    menuX: 0,
-    menuY: 0,
     menuOnRelation: undefined,
     tick: false,
     tickHandler: undefined,
@@ -145,10 +142,7 @@ export default {
 
   methods: {
     showMenu(e, relation) {
-      this.menuShown = false;
-      this.menuX = e.clientX;
-      this.menuY = e.clientY;
-      this.$nextTick(() => (this.menuShown = true));
+      this.$refs.menu.show(e);
       this.menuOnRelation = relation;
     },
     accept(relation) {
