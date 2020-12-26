@@ -24,7 +24,10 @@
           :key="id"
           v-intersect="
             (entries) =>
-              $set(messageVisibilityMapping, id, entries[0].isIntersecting)
+              (messageVisibilityMapping = {
+                ...messageVisibilityMapping,
+                [id]: entries[0].isIntersecting,
+              })
           "
         >
           <v-row
@@ -54,8 +57,13 @@
     </v-sheet>
 
     <v-sheet style="position: relative">
-      <v-snackbar :value="messageUpdates" color="info" timeout="-1" absolute>
-        {{ messageUpdates }}条新消息
+      <v-snackbar
+        :value="updatedMessages.length"
+        color="info"
+        timeout="-1"
+        absolute
+      >
+        {{ updatedMessages.length }}条新消息
         <template #action>
           <v-btn icon @click="scrollToBottom">
             <v-icon>mdi-chevron-down</v-icon>
@@ -125,7 +133,8 @@ export default {
     renderMessageFrom: 0,
     /**@type {Object<number, boolean>} */
     messageVisibilityMapping: {},
-    messageUpdates: 0,
+    /**@type {Message[]} */
+    updatedMessages: [],
   }),
 
   computed: {
@@ -145,11 +154,11 @@ export default {
     autoGrow() {
       return this.textInput.split("\n").length < 4;
     },
-    /**
-     * Whether the user is focusing on new messages.
-     */
-    userFocusing() {
-      return !!Object.values(this.messageVisibilityMapping).slice(-3)[0];
+    followingNewMessages() {
+      const THRESHOLD = 3;
+      return !!Object.values(this.messageVisibilityMapping).slice(
+        -THRESHOLD
+      )[0];
     },
   },
 
@@ -169,13 +178,12 @@ export default {
 
       const differences = newV.slice(oldV.length);
       const sent = differences.some((msg) => msg.sender == this.user.id);
-      const received = differences.filter((msg) => msg.sender != this.user.id)
-        .length;
+      const received = differences.filter((msg) => msg.sender != this.user.id);
 
-      if (this.userFocusing || sent) {
+      if (this.followingNewMessages || sent) {
         this.scrollToBottom();
       } else {
-        this.messageUpdates += received;
+        this.updatedMessages = this.updatedMessages.concat(received);
       }
     },
     /**
@@ -189,11 +197,21 @@ export default {
         await new Promise((r) => setTimeout(r, 50));
       }
     },
-    /**
-     * Clear the message updates.
-     */
-    userFocusing() {
-      if (this.userFocusing) this.messageUpdates = 0;
+    messageVisibilityMapping() {
+      const updatedMessagecount = this.updatedMessages.length;
+      if (!updatedMessagecount) return;
+
+      const nearBottom = Object.values(this.messageVisibilityMapping).slice(
+        -updatedMessagecount
+      )[0];
+      if (!nearBottom) return;
+
+      const updatedMessageSet = new Set(this.updatedMessages);
+      for (const message of this.updatedMessages) {
+        if (this.messageVisibilityMapping[message.id])
+          updatedMessageSet.delete(message);
+      }
+      this.updatedMessages = [...updatedMessageSet];
     },
   },
 
