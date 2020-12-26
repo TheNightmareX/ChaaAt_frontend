@@ -45,7 +45,7 @@
       </v-container>
     </v-main>
 
-    <Notifier ref="notifier"></Notifier>
+    <Notifier app top right ref="notifier"></Notifier>
   </v-app>
 </template>
 

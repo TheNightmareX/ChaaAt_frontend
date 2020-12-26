@@ -1,5 +1,5 @@
 <template>
-  <v-snackbar app top right :color="color" v-model="show">
+  <v-snackbar v-bind="$attrs" :color="color" v-model="show">
     {{ text }}
   </v-snackbar>
 </template>
