@@ -85,7 +85,7 @@ export default new Vuex.Store({
             mapping[key].push(msg);
           });
 
-          /**@type {Object<number, ComputedMessage>} */
+          /**@type {Object<number, ComputedMessage[]>} */
           const computedMapping = {};
           /**@type {[number, Message][]} */
           const entries = Object.entries(mapping);
