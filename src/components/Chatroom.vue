@@ -1,7 +1,7 @@
 <template>
   <v-sheet class="d-flex flex-column fill-height">
     <v-sheet
-      ref="msgs-container"
+      ref="msgs-scroller"
       class="flex-grow-1"
       style="height: 0; overflow: auto"
     >
@@ -9,8 +9,8 @@
         <v-row
           v-intersect="(entries) => (topExposed = entries[0].isIntersecting)"
           style="height: 1px"
-        >
-        </v-row>
+        ></v-row>
+
         <v-sheet
           class="mb-2 px-2"
           v-for="{
@@ -22,6 +22,10 @@
             isDifferentSender,
           } of renderedMessages"
           :key="id"
+          v-intersect="
+            (entries) =>
+              $set(messageVisibilityMapping, id, entries[0].isIntersecting)
+          "
         >
           <v-row
             v-if="hasTimeGap"
@@ -48,6 +52,18 @@
         </v-sheet>
       </v-container>
     </v-sheet>
+
+    <v-sheet style="position: relative">
+      <v-snackbar :value="messageUpdates" color="info" timeout="-1" absolute>
+        {{ messageUpdates }}条新消息
+        <template #action>
+          <v-btn icon @click="scrollToBottom">
+            <v-icon>mdi-chevron-down</v-icon>
+          </v-btn>
+        </template>
+      </v-snackbar>
+    </v-sheet>
+
     <v-form ref="form">
       <v-sheet v-if="$vuetify.breakpoint.smAndUp">
         <v-toolbar color="primary" dense flat></v-toolbar>
@@ -98,7 +114,7 @@ import "vuetify";
 import { mapGetters, mapState } from "vuex";
 import * as apis from "../apis";
 
-/**@typedef {import('../store').ComputedMessage} ComputedMessage */
+/**@typedef {import('../store').ComputedMessage} Message */
 
 export default {
   name: "Chatroom",
@@ -106,7 +122,10 @@ export default {
   data: () => ({
     textInput: "",
     topExposed: false,
-    messagesHead: 0,
+    renderMessageFrom: 0,
+    /**@type {Object<number, boolean>} */
+    messageVisibilityMapping: {},
+    messageUpdates: 0,
   }),
 
   props: {
@@ -117,17 +136,23 @@ export default {
     ...mapState(["user"]),
     ...mapGetters(["users"]),
     ...mapGetters("messages", ["messagesMapping"]),
-    /**@returns {ComputedMessage[]} */
+    /**@returns {Message[]} */
     relatedMessages() {
       return this.messagesMapping[this.chatroomID] ?? [];
     },
-    /**@returns {ComputedMessage[]} */
+    /**@returns {Message[]} */
     renderedMessages() {
-      return this.relatedMessages.slice(this.messagesHead);
+      return this.relatedMessages.slice(this.renderMessageFrom);
     },
     /**@returns {boolean} */
     autoGrow() {
       return this.textInput.split("\n").length < 4;
+    },
+    /**
+     * Whether the user is focusing on new messages.
+     */
+    userFocusing() {
+      return !!Object.values(this.messageVisibilityMapping).slice(-3)[0];
     },
   },
 
@@ -135,15 +160,43 @@ export default {
     chatroomID() {
       this.init();
     },
-    relatedMessages() {
-      this.scrollToBottom();
+    /**
+     * Scroll to the bottom if user sent a message or is focusing on the new messages.
+     * Record the message updates which the user didn't noticed.
+     * @param {Message[]} newV
+     * @param {Message[]} oldV
+     */
+    relatedMessages(newV, oldV) {
+      // No operation when it is triggered because of the `chatroomID`'s change
+      if (newV.length <= oldV.length || newV[0].id != oldV[0]?.id) return;
+
+      const differences = newV.slice(oldV.length);
+      const sent = differences.some((msg) => msg.sender == this.user.id);
+      const received = differences.filter((msg) => msg.sender != this.user.id)
+        .length;
+
+      if (this.userFocusing || sent) {
+        this.scrollToBottom();
+      } else {
+        this.messageUpdates += received;
+      }
     },
+    /**
+     * Load more messages when the user scrolls to the top.
+     */
     async topExposed(exposed) {
       if (!exposed) return;
-      while (this.topExposed && this.messagesHead > 0) {
-        this.messagesHead--;
+
+      while (this.topExposed && this.renderMessageFrom > 0) {
+        this.renderMessageFrom--;
         await new Promise((r) => setTimeout(r, 50));
       }
+    },
+    /**
+     * Clear the message updates.
+     */
+    userFocusing() {
+      if (this.userFocusing) this.messageUpdates = 0;
     },
   },
 
@@ -151,7 +204,7 @@ export default {
     init() {
       const INIT_SIZE = 20;
       const length = this.relatedMessages.length;
-      this.messagesHead = length > INIT_SIZE ? length - INIT_SIZE : 0;
+      this.renderMessageFrom = length > INIT_SIZE ? length - INIT_SIZE : 0;
       this.scrollToBottom();
     },
     /**
@@ -165,7 +218,7 @@ export default {
       this.textInput = "";
     },
     scrollToBottom() {
-      const el = this.$refs["msgs-container"];
+      const el = this.$refs["msgs-scroller"];
       this.$vuetify.goTo(9999, { container: el });
     },
   },
