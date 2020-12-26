@@ -14,7 +14,6 @@ export default new Vuetify({
       light: {
         primary: colors.teal,
         secondary: colors.cyan,
-        warning: colors.orange,
       },
     },
   },
