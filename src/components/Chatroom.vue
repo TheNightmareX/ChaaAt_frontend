@@ -223,8 +223,11 @@ export default {
   methods: {
     init() {
       const INIT_SIZE = 20;
-      const length = this.relatedMessages.length;
-      this.renderMessageFrom = length > INIT_SIZE ? length - INIT_SIZE : 0;
+      const messageCount = this.relatedMessages.length;
+      this.renderMessageFrom = messageCount > INIT_SIZE ? messageCount - INIT_SIZE : 0;
+
+      this.messageVisibilityMapping = {}
+
       this.scrollToBottom();
     },
     /**
