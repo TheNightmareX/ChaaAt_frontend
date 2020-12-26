@@ -39,7 +39,7 @@
               v-for="relation of sortedAcceptedRelations"
               :key="relation.id"
               two-line
-              @click="$emit('change', relation.chatroom)"
+              @click="switchChatroom({ chatroomID: relation.chatroom })"
               @contextmenu.prevent="showMenu($event, relation)"
             >
               <v-list-item-content>
@@ -116,7 +116,7 @@
 <script>
 import * as timeago from "timeago.js";
 import * as apis from "../apis";
-import { mapGetters } from "vuex";
+import { mapGetters, mapMutations } from "vuex";
 import ContextMenu from "./ContextMenu";
 
 /**@typedef {import("../store").ComputedMessage} Message */
@@ -173,6 +173,7 @@ export default {
   },
 
   methods: {
+    ...mapMutations(['switchChatroom']),
     showMenu(e, relation) {
       this.relationMenuOn = relation;
       this.$refs.menu.show(e);

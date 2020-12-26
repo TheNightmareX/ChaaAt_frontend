@@ -15,6 +15,7 @@ export default new Vuex.Store({
   state: {
     /**@type {User} */
     user: {},
+    activeChatroomID: 0,
   },
   getters: {
     authed(state) {
@@ -45,6 +46,9 @@ export default new Vuex.Store({
         state.friendRelations.relations = {};
         state.friendRelations.loaded = false;
       }
+    },
+    switchChatroom(state, { chatroomID }) {
+      state.activeChatroomID = chatroomID;
     },
   },
   actions: {

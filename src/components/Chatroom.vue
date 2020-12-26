@@ -128,12 +128,9 @@ export default {
     messageUpdates: 0,
   }),
 
-  props: {
-    chatroomID: Number,
-  },
-
   computed: {
     ...mapState(["user"]),
+    ...mapState({ chatroomID: "activeChatroomID" }),
     ...mapGetters(["users"]),
     ...mapGetters("messages", ["messagesMapping"]),
     /**@returns {Message[]} */

@@ -16,7 +16,7 @@
     </v-app-bar>
 
     <v-navigation-drawer v-model="navigationDrawerOpen" app clipped>
-      <FriendsList @change="chatroomID = $event">
+      <FriendsList>
         <v-list-item>
           <v-list-item-title class="d-flex justify-space-around">
             <RelationCreationDialog @error="alert($event)">
@@ -34,9 +34,10 @@
     <v-main>
       <Chatroom
         v-if="
-          friendRelations.accepted.some((v) => v.chatroom == this.chatroomID)
+          friendRelations.accepted.some(
+            (v) => v.chatroom == this.activeChatroomID
+          )
         "
-        :chatroomID="chatroomID"
       ></Chatroom>
       <v-container v-else>
         <v-row class="mt-12 mb-3" justify="center">
@@ -72,13 +73,12 @@ export default {
 
   data: () => ({
     navigationDrawerOpen: undefined,
-    chatroomID: 0,
     syncersRunning: false,
     syncersKiller: undefined,
   }),
 
   computed: {
-    ...mapState(["user"]),
+    ...mapState(["user", "activeChatroomID"]),
     ...mapGetters("friendRelations", {
       friendRelations: "relations",
     }),
