@@ -20,10 +20,11 @@ export default {
      * @param {string} message
      * @param {string} color
      */
-    notify(message, color = "info") {
+    async notify(message, color = "info") {
       this.text = message;
       this.color = color;
       this.show = false;
+      await this.$nextTick()
       this.show = true;
     },
   },
