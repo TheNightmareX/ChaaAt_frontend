@@ -6,11 +6,6 @@
       style="height: 0; overflow: auto"
     >
       <v-container fluid style="position: relative">
-        <v-row
-          v-intersect="([entry]) => (topExposed = entry.isIntersecting)"
-          style="height: 1px"
-        ></v-row>
-
         <v-sheet
           class="mb-2 px-2"
           v-for="{
@@ -134,7 +129,6 @@ export default {
 
   data: () => ({
     textInput: "",
-    topExposed: false,
     renderMessageFrom: 0,
     /**@type {Object<number, boolean>} */
     messageVisibilityMapping: {},
@@ -164,6 +158,12 @@ export default {
       return !!Object.values(this.messageVisibilityMapping).slice(
         -THRESHOLD
       )[0];
+    },
+    topExposed() {
+      return !!Object.values(this.messageVisibilityMapping)
+        // magic to solve a strange bug
+        .slice(0, 2)
+        .some((visible) => visible);
     },
   },
 
@@ -238,7 +238,7 @@ export default {
       this.textInput = "";
     },
     async scrollToBottom() {
-      await this.$nextTick()
+      await this.$nextTick();
       this.$vuetify.goTo("#msgs-container-bottom", {
         container: this.$refs["msgs-scroller"],
       });
