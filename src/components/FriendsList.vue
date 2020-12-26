@@ -6,17 +6,9 @@
         <ContextMenu ref="menu">
           <template v-slot="{ shown }">
             <v-list v-if="shown" dense min-width="200">
-              <v-list-item
-                @click="
-                  (fixedMapping[relationMenuOn.chatroom] ? $delete : $set)(
-                    fixedMapping,
-                    relationMenuOn.chatroom,
-                    true
-                  )
-                "
-              >
+              <v-list-item @click="setFixed({ relationID: relationMenuOn.id })">
                 <v-list-item-title>{{
-                  fixedMapping[relationMenuOn.chatroom]
+                  fixedMapping[relationMenuOn.id]
                     ? "取消固定"
                     : "固定顶部"
                 }}</v-list-item-title>
@@ -45,7 +37,7 @@
               <v-list-item-content>
                 <v-list-item-title
                   :class="
-                    fixedMapping[relation.chatroom] ? 'secondary--text' : ''
+                    fixedMapping[relation.id] ? 'secondary--text' : ''
                   "
                   >{{ relation.user.username }}</v-list-item-title
                 >
@@ -116,7 +108,7 @@
 <script>
 import * as timeago from "timeago.js";
 import * as apis from "../apis";
-import { mapGetters, mapMutations } from "vuex";
+import { mapState, mapGetters, mapMutations } from "vuex";
 import ContextMenu from "./ContextMenu";
 
 /**@typedef {import("../store").ComputedMessage} Message */
@@ -130,11 +122,11 @@ export default {
   data: () => ({
     tick: false,
     tickHandler: undefined,
-    fixedMapping: {},
     relationMenuOn: undefined,
   }),
 
   computed: {
+    ...mapState("friendRelations", ["fixedMapping"]),
     ...mapGetters("friendRelations", ["relations"]),
     ...mapGetters("messages", ["messagesMapping"]),
     /**@returns {Object<number, [string, string]>} */
@@ -162,7 +154,7 @@ export default {
 
       return relations.sort((rA, rB) => {
         const [timeA, timeB] = [rA, rB].map((r) =>
-          this.fixedMapping[r.chatroom]
+          this.fixedMapping[r.id]
             ? new Date()
             : messagesMapping[r.chatroom]?.slice(-1)?.[0]?.creationTime ??
               new Date(0)
@@ -173,7 +165,8 @@ export default {
   },
 
   methods: {
-    ...mapMutations(['switchChatroom']),
+    ...mapMutations(["switchChatroom"]),
+    ...mapMutations("friendRelations", ["setFixed"]),
     showMenu(e, relation) {
       this.relationMenuOn = relation;
       this.$refs.menu.show(e);

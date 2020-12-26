@@ -146,6 +146,7 @@ export default new Vuex.Store({
         /**@type {Object<number, FriendRelation>} */
         relations: {},
         loaded: false,
+        fixedMapping: {},
       },
       getters: {
         relations(state, getters, rootState) {
@@ -175,8 +176,15 @@ export default new Vuex.Store({
           relations.forEach((r) => Vue.set(state.relations, r.id, r));
           state.loaded = true;
         },
-        delete(state, { id }) {
-          Vue.delete(state.relations, id);
+        delete(state, { relationID }) {
+          Vue.delete(state.relations, relationID);
+        },
+        setFixed(state, { relationID, fixed = undefined }) {
+          Vue.set(
+            state.fixedMapping,
+            relationID,
+            fixed != undefined ? fixed : !state.fixedMapping[relationID]
+          );
         },
       },
       actions: {
@@ -203,7 +211,7 @@ export default new Vuex.Store({
                   commit("append", { relations: [value] });
                   break;
                 case "delete":
-                  commit("delete", { id: value });
+                  commit("delete", { relationID: value });
                   break;
               }
             }
