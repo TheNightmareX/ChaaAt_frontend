@@ -8,9 +8,7 @@
             <v-list v-if="shown" dense min-width="200">
               <v-list-item @click="setFixed({ relationID: relationMenuOn.id })">
                 <v-list-item-title>{{
-                  fixedMapping[relationMenuOn.id]
-                    ? "取消固定"
-                    : "固定顶部"
+                  fixedMapping[relationMenuOn.id] ? "取消固定" : "固定顶部"
                 }}</v-list-item-title>
               </v-list-item>
 
@@ -36,9 +34,7 @@
             >
               <v-list-item-content>
                 <v-list-item-title
-                  :class="
-                    fixedMapping[relation.id] ? 'secondary--text' : ''
-                  "
+                  :class="fixedMapping[relation.id] ? 'secondary--text' : ''"
                   >{{ relation.user.username }}</v-list-item-title
                 >
                 <v-list-item-subtitle
@@ -139,8 +135,15 @@ export default {
       relations.forEach((relation) => {
         /**@type {Message} */
         const message = this.messagesMapping[relation.chatroom]?.slice(-1)?.[0];
+        const now = new Date();
         mapping[relation.id] = message
-          ? [message.text, timeago.format(message.creationTime, "zh_CN")]
+          ? [
+              message.text,
+              timeago.format(
+                message.creationTime <= now ? message.creationTime : now, // causes by the server time difference
+                "zh_CN"
+              ),
+            ]
           : ["...", "..."];
       });
 
