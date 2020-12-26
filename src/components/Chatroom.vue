@@ -19,10 +19,12 @@
           :key="id"
           v-intersect="
             ([entry]) =>
-              (messageVisibilityMapping = {
-                ...messageVisibilityMapping,
-                [id]: entry.isIntersecting,
-              })
+              (messageVisibilityMapping = inited
+                ? {
+                    ...messageVisibilityMapping,
+                    [id]: entry.isIntersecting,
+                  }
+                : {})
           "
         >
           <v-row
@@ -128,6 +130,7 @@ export default {
   name: "Chatroom",
 
   data: () => ({
+    inited: false,
     textInput: "",
     renderMessageFrom: 0,
     /**@type {Object<number, boolean>} */
@@ -153,12 +156,14 @@ export default {
     autoGrow() {
       return this.textInput.split("\n").length < 4;
     },
+    /**@returns {boolean} */
     followingNewMessages() {
       const THRESHOLD = 3;
       return !!Object.values(this.messageVisibilityMapping).slice(
         -THRESHOLD
       )[0];
     },
+    /**@returns {boolean} */
     topExposed() {
       return !!Object.values(this.messageVisibilityMapping)
         // magic to solve a strange bug
@@ -169,6 +174,7 @@ export default {
 
   watch: {
     chatroomID() {
+      this.inited = false;
       this.init();
     },
     /**
@@ -221,14 +227,16 @@ export default {
   },
 
   methods: {
-    init() {
+    async init() {
       const INIT_SIZE = 20;
-      const messageCount = this.relatedMessages.length;
-      this.renderMessageFrom = messageCount > INIT_SIZE ? messageCount - INIT_SIZE : 0;
+      const msgCount = this.relatedMessages.length;
+      this.renderMessageFrom = msgCount > INIT_SIZE ? msgCount - INIT_SIZE : 0;
 
-      this.messageVisibilityMapping = {}
+      this.messageVisibilityMapping = {};
 
-      this.scrollToBottom();
+      await this.scrollToBottom();
+
+      this.inited = true;
     },
     /**
      * Create a message, and the syncer will update messages automatically.
@@ -242,7 +250,7 @@ export default {
     },
     async scrollToBottom() {
       await this.$nextTick();
-      this.$vuetify.goTo("#msgs-container-bottom", {
+      await this.$vuetify.goTo("#msgs-container-bottom", {
         container: this.$refs["msgs-scroller"],
       });
     },
