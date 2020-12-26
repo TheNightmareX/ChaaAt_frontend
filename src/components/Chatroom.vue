@@ -5,7 +5,7 @@
       class="flex-grow-1"
       style="height: 0; overflow: auto"
     >
-      <v-container fluid>
+      <v-container fluid style="position: relative">
         <v-row
           v-intersect="(entries) => (topExposed = entries[0].isIntersecting)"
           style="height: 1px"
@@ -53,6 +53,11 @@
             >
           </v-row>
         </v-sheet>
+
+        <v-row
+          id="msgs-container-bottom"
+          style="position: absolute; bottom: 0"
+        ></v-row>
       </v-container>
     </v-sheet>
 
@@ -232,9 +237,11 @@ export default {
       });
       this.textInput = "";
     },
-    scrollToBottom() {
-      const el = this.$refs["msgs-scroller"];
-      this.$vuetify.goTo(9999, { container: el });
+    async scrollToBottom() {
+      await this.$nextTick()
+      this.$vuetify.goTo("#msgs-container-bottom", {
+        container: this.$refs["msgs-scroller"],
+      });
     },
   },
   mounted() {
