@@ -15,7 +15,7 @@ export default new (class {
     return axios.post("friend-relations/", { target_user });
   }
   /**
-   * @param {{ page: import(".").PageNum }}
+   * @param {{ page: import(".").PageNum, forEach: (relations: Relation[]) => any }}
    * @returns {Promise<import(".").PageOf<Relation>>}
    */
   @paginated

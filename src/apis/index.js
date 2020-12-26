@@ -51,9 +51,15 @@ export function api(target, key, descriptor) {
 }
 
 /**
- * Make an api method which returns paginated data easier to use by
- * converting the `next` and `previous` fields into functions.
- * Call these two methods without any params to get another page.
+ * Make an api method which returns paginated data easier to use.
+ *
+ * Converting the `next` and `previous` fields into functions, which
+ * can be called without any params to get another page.
+ *
+ * Add an extra optional param: `forEach`, which should be passed as
+ * a function with each page's data as its first param.
+ *
+ * Note that the api method should be passed params through a object.
  * @type {MethodDecorator}
  */
 export function paginated(target, key, descriptor) {
@@ -72,6 +78,28 @@ export function paginated(target, key, descriptor) {
       return pageData;
     };
   }
-  descriptor.value = wrap(descriptor.value);
+
+  const getPage = wrap(descriptor.value);
+
+  descriptor.value =
+    /**
+     *
+     * @param {{ forEach?: (results: any[]) => any }} args
+     */
+    async function(args = {}) {
+      const forEach = args.forEach;
+      args = { ...args, forEach: undefined };
+
+      if (forEach) {
+        let nextPage = () => getPage(args);
+        while (nextPage) {
+          const { next, results } = await nextPage();
+          forEach(results);
+          nextPage = next;
+        }
+      } else {
+        return await getPage();
+      }
+    };
   return descriptor;
 }
