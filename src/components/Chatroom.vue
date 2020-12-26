@@ -7,7 +7,7 @@
     >
       <v-container fluid style="position: relative">
         <v-row
-          v-intersect="(entries) => (topExposed = entries[0].isIntersecting)"
+          v-intersect="([entry]) => (topExposed = entry.isIntersecting)"
           style="height: 1px"
         ></v-row>
 
@@ -23,10 +23,10 @@
           } of renderedMessages"
           :key="id"
           v-intersect="
-            (entries) =>
+            ([entry]) =>
               (messageVisibilityMapping = {
                 ...messageVisibilityMapping,
-                [id]: entries[0].isIntersecting,
+                [id]: entry.isIntersecting,
               })
           "
         >
