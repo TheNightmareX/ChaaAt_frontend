@@ -21,6 +21,12 @@
       ></v-textarea>
     </v-sheet>
     <v-sheet v-else color="primary" style="overflow: hidden">
+      <TextAreaRowsCalculator
+        v-model="rows"
+        :target="this.$el ? this.$el.querySelector('textarea') : undefined"
+        :text="text"
+        :widthOffset="12"
+      ></TextAreaRowsCalculator>
       <v-container>
         <v-row no-gutters>
           <v-col class="py-0">
@@ -28,7 +34,7 @@
               v-model="text"
               no-resize
               rows="1"
-              :auto-grow="autoGrow"
+              :auto-grow="rows < 4"
               solo
               dense
               style="margin-bottom: -28px"
@@ -46,20 +52,20 @@
 <script>
 import { mapState } from "vuex";
 import * as apis from "../apis";
+import TextAreaRowsCalculator from "./TextAreaRowsCalculator";
 
 export default {
   name: "MessageInput",
 
+  components: { TextAreaRowsCalculator },
+
   data: () => ({
+    rows: 0,
     text: "",
   }),
 
   computed: {
     ...mapState(["activeChatroomID"]),
-    /**@returns {boolean} */
-    autoGrow() {
-      return this.text.split("\n").length < 4;
-    },
   },
 
   methods: {
