@@ -74,60 +74,21 @@
       </v-snackbar>
     </v-sheet>
 
-    <v-form ref="form">
-      <v-sheet v-if="$vuetify.breakpoint.smAndUp">
-        <v-toolbar color="primary" dense flat></v-toolbar>
-        <v-textarea
-          v-model="textInput"
-          no-resize
-          filled
-          autofocus
-          clearable
-          full-width
-          counter="100"
-          append-icon="mdi-send"
-          :rules="[
-            (v) => !v || !!v.trim() || '消息不得为空',
-            (v) => !v || v.length <= 100 || '至多100字',
-          ]"
-          hint="按下 Ctrl + Enter 发送"
-          @click:append="send"
-          @keydown.enter.ctrl="send"
-        ></v-textarea>
-      </v-sheet>
-      <v-sheet v-else color="primary" style="overflow: hidden">
-        <v-container>
-          <v-row no-gutters>
-            <v-col class="py-0">
-              <v-textarea
-                v-model="textInput"
-                no-resize
-                rows="1"
-                :auto-grow="autoGrow"
-                solo
-                dense
-                style="margin-bottom: -28px"
-                append-icon="mdi-send"
-                :rules="[(v) => !v || (!!v.trim() && v.length <= 100)]"
-                @click:append="send"
-              ></v-textarea>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-sheet>
-    </v-form>
+    <MessageInput></MessageInput>
   </v-sheet>
 </template>
 
 <script>
 import "vuetify";
 import { mapGetters, mapState } from "vuex";
-import * as apis from "../apis";
+import MessageInput from "./MessageInput";
 
 /**@typedef {import('../store').ComputedMessage} Message */
 
 export default {
   name: "Chatroom",
+
+  components: { MessageInput },
 
   data: () => ({
     inited: false,
@@ -151,10 +112,6 @@ export default {
     /**@returns {Message[]} */
     renderedMessages() {
       return this.relatedMessages.slice(this.renderMessageFrom);
-    },
-    /**@returns {boolean} */
-    autoGrow() {
-      return this.textInput.split("\n").length < 4;
     },
     /**@returns {boolean} */
     followingNewMessages() {
@@ -237,16 +194,6 @@ export default {
       await this.scrollToBottom();
 
       this.inited = true;
-    },
-    /**
-     * Create a message, and the syncer will update messages automatically.
-     */
-    send() {
-      if (!this.textInput || !this.$refs["form"].validate()) return;
-      apis.messages.create({
-        message: { text: this.textInput, chatroom: this.chatroomID },
-      });
-      this.textInput = "";
     },
     async scrollToBottom() {
       await this.$nextTick();
