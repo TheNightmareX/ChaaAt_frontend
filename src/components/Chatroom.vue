@@ -191,16 +191,16 @@ export default {
 
       this.messageVisibilityMapping = {};
 
-      await this.scrollToBottom();
-
-      this.inited = true;
-    },
-    async scrollToBottom() {
       await this.$nextTick();
       await this.$vuetify.goTo(0, {
         container: this.$refs["msgs-scroller"],
         duration: 0,
       });
+      await this.scrollToBottom();
+
+      this.inited = true;
+    },
+    async scrollToBottom() {
       await this.$vuetify.goTo("#msgs-container-bottom", {
         container: this.$refs["msgs-scroller"],
       });
