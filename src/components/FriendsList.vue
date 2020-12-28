@@ -23,7 +23,7 @@
           <v-list-item-title>好友</v-list-item-title>
         </template>
 
-        <v-list-item-group>
+        <v-list-item-group mandatory>
           <transition-group>
             <v-list-item
               v-for="relation of sortedAcceptedRelations"
