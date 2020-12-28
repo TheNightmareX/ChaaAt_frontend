@@ -1,4 +1,4 @@
-import { api, paginated } from "./index";
+import { api, paginated } from ".";
 import axios from "axios";
 
 /**@typedef {{ id: number, text: string, sender: number, chatroom: number, creationTime: string }} Message */

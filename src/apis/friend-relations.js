@@ -1,4 +1,4 @@
-import { api, paginated } from "./index";
+import { api, paginated } from ".";
 import axios from "axios";
 
 /**@typedef {import('./auth').User} User  */
