@@ -32,19 +32,4 @@ export default new (class {
   destroy({ id }) {
     return axios.delete(`friend-relations/${id}/`);
   }
-  /**
-   * @param {{ cancelToken: import("axios").CancelToken }}
-   * @returns {Promise<['save' | 'delete', Relation | number][]>}
-   */
-  @api
-  getUpdations({ cancel_token: cancelToken = undefined } = {}) {
-    return axios.get("friend-relations/updates/", { cancelToken });
-  }
-  /**
-   * @returns {Promise<"">}
-   */
-  @api
-  clearUpdations() {
-    return axios.delete("friend-relations/updates/");
-  }
 })();

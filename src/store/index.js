@@ -67,6 +67,22 @@ export default new Vuex.Store({
       await apis.auth.logout();
       commit("auth");
     },
+    async sync({ commit }, { cancelToken = undefined } = {}) {
+      const updates = await apis.updates.list({ cancelToken });
+      updates.forEach(([label, data]) => {
+        switch (label) {
+          case "friend_relation.create":
+            commit("friendRelations/append", { relations: [data] });
+            break;
+          case "friend_relation.destroy":
+            commit("friendRelations/delete", { relationID: data });
+            break;
+          case "message.create":
+            commit("messages/append", { messages: [data] });
+            break;
+        }
+      });
+    },
   },
   modules: {
     messages: {
@@ -74,7 +90,6 @@ export default new Vuex.Store({
       state: {
         /**@type {Object<number, Message>} */
         messages: {},
-        loaded: false,
       },
       getters: {
         messagesMapping(state) {
@@ -119,24 +134,13 @@ export default new Vuex.Store({
             /**@param {Message} msg */
             (msg) => Vue.set(state.messages, msg.id, msg)
           );
-          state.loaded = true;
         },
       },
       actions: {
-        /**
-         * Load all the messages when it is called for the first time
-         * , otherwise sync messages.
-         */
-        async sync({ state, commit }, { cancelToken = undefined } = {}) {
-          if (!state.loaded) {
-            await apis.messages.clearUpdations();
-            await apis.messages.list({
-              forEach: (messages) => commit("append", { messages }),
-            });
-          } else {
-            const updations = await apis.messages.getUpdations({ cancelToken });
-            commit("append", { messages: updations });
-          }
+        async load({ commit }) {
+          await apis.messages.list({
+            forEach: (messages) => commit("append", { messages }),
+          });
         },
       },
     },
@@ -145,7 +149,7 @@ export default new Vuex.Store({
       state: {
         /**@type {Object<number, FriendRelation>} */
         relations: {},
-        loaded: false,
+        // loaded: false,
         fixedMapping: {},
       },
       getters: {
@@ -174,7 +178,6 @@ export default new Vuex.Store({
       mutations: {
         append(state, { relations }) {
           relations.forEach((r) => Vue.set(state.relations, r.id, r));
-          state.loaded = true;
         },
         delete(state, { relationID }) {
           Vue.delete(state.relations, relationID);
@@ -188,31 +191,10 @@ export default new Vuex.Store({
         },
       },
       actions: {
-        /**
-         * Load all the friend relations when it is called for the first time
-         * , otherwise sync friend relations.
-         */
-        async sync({ state, commit }, { cancelToken = undefined } = {}) {
-          if (!state.loaded) {
-            apis.friendRelations.clearUpdations();
-            await apis.friendRelations.list({
-              forEach: (relations) => commit("append", { relations }),
-            });
-          } else {
-            const updations = await apis.friendRelations.getUpdations({
-              cancelToken,
-            });
-            for (const [action, value] of updations) {
-              switch (action) {
-                case "save":
-                  commit("append", { relations: [value] });
-                  break;
-                case "delete":
-                  commit("delete", { relationID: value });
-                  break;
-              }
-            }
-          }
+        async load({ commit }) {
+          await apis.friendRelations.list({
+            forEach: (relations) => commit("append", { relations }),
+          });
         },
       },
     },

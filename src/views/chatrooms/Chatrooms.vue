@@ -56,6 +56,8 @@
 <script>
 import axios from "axios";
 import { mapState, mapGetters, mapActions } from "vuex";
+import * as apis from "../../apis";
+
 import ProfileMenu from "../../components/ProfileMenu";
 import Chatroom from "../../components/Chatroom";
 import RelationCreationDialog from "../../components/RelationCreationDialog";
@@ -93,34 +95,29 @@ export default {
       if (v) {
         const source = axios.CancelToken.source();
         this.syncersKiller = source.cancel;
-        const run = async (syncfn, name) => {
-          console.log(`${name} syncer is running`);
+        (async () => {
+          console.log(`syncer is running`);
           while (this.syncersRunning) {
             try {
-              await syncfn({
-                cancelToken: source.token,
-              });
+              await this.sync({ cancelToken: source.token });
             } catch (e) {
               if (e.constructor == axios.Cancel) break;
               else {
-                console.warn(`Caught error in ${name} syncer`, e);
+                console.warn(`Caught error in syncer\n`, e);
                 await new Promise((resolve) => setTimeout(resolve, 1000));
               }
             }
           }
-          console.log(`${name} syncer is stoped`);
-        };
-        run(this.syncMessages, "messages");
-        run(this.syncFriendRelations, "friend relations");
+          console.log(`syncer is stoped`);
+        })();
       }
     },
   },
 
   methods: {
-    ...mapActions({
-      syncMessages: "messages/sync",
-      syncFriendRelations: "friendRelations/sync",
-    }),
+    ...mapActions(["sync"]),
+    ...mapActions("friendRelations", { loadFriendRelations: "load" }),
+    ...mapActions("messages", { loadMessages: "load" }),
     /**
      *
      * @param {string} msg
@@ -130,8 +127,11 @@ export default {
     },
   },
 
-  created() {
+  async created() {
+    await apis.updates.clear();
     this.syncersRunning = true;
+    this.loadMessages()
+    this.loadFriendRelations()
   },
 
   destroyed() {

@@ -22,20 +22,4 @@ export default new (class {
   create({ message }) {
     return axios.post("messages/", message);
   }
-  /**
-   *
-   * @param {{ cancelToken: import("axios").CancelToken }}
-   * @returns {Promise<Message[]>}
-   */
-  @api
-  getUpdations({ cancel_token: cancelToken = undefined } = {}) {
-    return axios.get("messages/updates/", { cancelToken });
-  }
-  /**
-   * @returns {Promise<"">}
-   */
-  @api
-  clearUpdations() {
-    return axios.delete("messages/updates/");
-  }
 })();

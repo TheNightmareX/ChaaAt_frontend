@@ -7,6 +7,7 @@ axios.defaults.xsrfHeaderName = "X-CSRFToken";
 export { default as auth } from "./auth";
 export { default as friendRelations } from "./friend-relations";
 export { default as messages } from "./messages";
+export { default as updates } from "./updates";
 
 /**@template T @typedef {{ count: number, previous: () => Promise<PageOf<T>> , next: () => Promise<PageOf<T>>, results: T[]}} PageOf */
 /**@typedef {number | 'last'} PageNum */
