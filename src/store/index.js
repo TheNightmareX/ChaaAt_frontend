@@ -6,8 +6,8 @@ import * as apis from "../apis";
 /**@typedef {import("../apis/messages").Message} Message */
 /**@typedef {import("../apis/friend-relations").Relation} FriendRelation */
 
-/**@typedef {{ creationTime: Date, hasTimeGap: boolean, isDifferentSender: boolean, id: number, text: string, sender: number, chatroom: number }} ComputedMessage */
-/**@typedef {{ id: number, user: User, asSender: boolean, chatroom: number }} ComputedFriendRelation */
+/**@typedef {{ creationTime: Date, hasTimeGap: boolean, isDifferentSender: boolean, id: number, text: string, sender: number, chatroom: number }} AnalyzedMessage */
+/**@typedef {{ id: number, user: User, asSender: boolean, chatroom: number }} AnalyzedFriendRelation */
 
 Vue.use(Vuex);
 
@@ -104,12 +104,12 @@ export default new Vuex.Store({
             mapping[key].push(msg);
           });
 
-          /**@type {Object<number, ComputedMessage[]>} */
-          const computedMapping = {};
-          /**@type {[number, Message][]} */
+          /**@type {Object<number, AnalyzedMessage[]>} */
+          const analyzedMapping = {};
+          /**@type {[number, Message[]][]} */
           const entries = Object.entries(mapping);
           entries.forEach(([chatroomID, messages]) => {
-            computedMapping[chatroomID] = messages.map((message, index) => {
+            analyzedMapping[chatroomID] = messages.map((message, index) => {
               const INTERVAL = 60000 * 1;
               const previous = messages[index - 1];
               const creationTime = new Date(message.creationTime);
@@ -125,7 +125,7 @@ export default new Vuex.Store({
             });
           });
 
-          return computedMapping;
+          return analyzedMapping;
         },
       },
       mutations: {
@@ -149,21 +149,24 @@ export default new Vuex.Store({
       state: {
         /**@type {Object<number, FriendRelation>} */
         relations: {},
-        // loaded: false,
         fixedMapping: {},
       },
       getters: {
         relations(state, getters, rootState) {
+        /**@type {Object<number, FriendRelation>} */
+          const allRelations = state.relations
           const accepted = [];
           const pending = [];
-          for (const id in state.relations) {
+          for (const id in allRelations) {
             const {
               sourceUser,
               targetUser,
               accepted: isAccepted,
               chatroom,
-            } = state.relations[id];
-            const asSender = sourceUser.username == rootState.user.username;
+            } = allRelations[id];
+            /**@type {User} */
+            const currentUser = rootState.user
+            const asSender = sourceUser.username == currentUser.username;
             const user = asSender ? targetUser : sourceUser;
             (isAccepted ? accepted : pending).push({
               id,

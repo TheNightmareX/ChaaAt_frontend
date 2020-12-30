@@ -83,7 +83,7 @@ import "vuetify";
 import { mapGetters, mapState } from "vuex";
 import MessageInput from "./MessageInput";
 
-/**@typedef {import('../store').ComputedMessage} Message */
+/**@typedef {import('../store').AnalyzedMessage} Message */
 
 export default {
   name: "Chatroom",

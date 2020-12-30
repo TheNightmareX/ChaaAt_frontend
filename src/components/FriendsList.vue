@@ -107,8 +107,8 @@ import * as apis from "../apis";
 import { mapState, mapGetters, mapMutations } from "vuex";
 import ContextMenu from "./ContextMenu";
 
-/**@typedef {import("../store").ComputedMessage} Message */
-/**@typedef {import("../store").ComputedFriendRelation} Relation */
+/**@typedef {import("../store").AnalyzedMessage} Message */
+/**@typedef {import("../store").AnalyzedFriendRelation} Relation */
 
 export default {
   name: "FriendsList",
