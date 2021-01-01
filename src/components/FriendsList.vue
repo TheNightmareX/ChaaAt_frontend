@@ -23,7 +23,7 @@
           <v-list-item-title>好友</v-list-item-title>
         </template>
 
-        <v-list-item-group mandatory>
+        <v-list-item-group :mandatory="!!activeChatroomID">
           <transition-group>
             <v-list-item
               v-for="relation of sortedAcceptedRelations"
@@ -122,6 +122,7 @@ export default {
   }),
 
   computed: {
+    ...mapState(["activeChatroomID"]),
     ...mapState("friendRelations", ["fixedMapping"]),
     ...mapGetters("friendRelations", ["relations"]),
     ...mapGetters("messages", ["messagesMapping"]),
