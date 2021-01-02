@@ -90,7 +90,6 @@ export function paginated(target, key, descriptor) {
     async function(args = {}) {
       const forEach = args.forEach;
       args = { ...args, forEach: undefined };
-
       if (forEach) {
         let nextPage = () => getPage(args);
         while (nextPage) {
@@ -99,7 +98,7 @@ export function paginated(target, key, descriptor) {
           nextPage = next;
         }
       } else {
-        return await getPage();
+        return await getPage(args);
       }
     };
   return descriptor;
