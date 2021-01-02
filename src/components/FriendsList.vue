@@ -122,11 +122,11 @@ export default {
   }),
 
   computed: {
-    ...mapState(["activeChatroomID"]),
+    ...mapState(["activeChatroomID", "user"]),
     ...mapState("friendRelations", ["fixedMapping"]),
     ...mapGetters("friendRelations", ["relations"]),
-    ...mapGetters("messages", ["messagesMapping"]),
-    /**@returns {Object<number, [string, string]>} */
+    ...mapGetters("messages", ["analyzedMessageMapping"]),
+    /**@returns {Object<string, [string, string]>} */
     latestMessageDisplayMapping() {
       this.tick;
 
@@ -135,7 +135,9 @@ export default {
       const relations = this.relations.accepted;
       relations.forEach((relation) => {
         /**@type {Message} */
-        const message = this.messagesMapping[relation.chatroom]?.slice(-1)?.[0];
+        const message = this.analyzedMessageMapping[relation.chatroom]?.slice(
+          -1
+        )?.[0];
         const now = new Date();
         mapping[relation.id] = message
           ? [
@@ -153,14 +155,14 @@ export default {
     sortedAcceptedRelations() {
       /**@type {Relation[]} */
       const relations = this.relations.accepted;
-      /**@type {Object<number, Message[]>} */
-      const messagesMapping = this.messagesMapping;
+      /**@type {Object<string, Message[]>} */
+      const messageMapping = this.analyzedMessageMapping;
 
       return relations.sort((rA, rB) => {
         const [timeA, timeB] = [rA, rB].map((r) =>
           this.fixedMapping[r.id]
             ? new Date()
-            : messagesMapping[r.chatroom]?.slice(-1)?.[0]?.creationTime ??
+            : messageMapping[r.chatroom]?.slice(-1)?.[0]?.creationTime ??
               new Date(0)
         );
         return timeB - timeA;
@@ -175,9 +177,17 @@ export default {
       this.relationMenuOn = relation;
       this.$refs.menu.show(e);
     },
+    /**
+     *
+     * @param {Relation} relation
+     */
     accept(relation) {
       apis.friendRelations.create({ targetUser: relation.user.id });
     },
+    /**
+     *
+     * @param {Relation} relation
+     */
     destroy(relation) {
       apis.friendRelations.destroy({ id: relation.id });
     },

@@ -94,7 +94,7 @@ export default {
     inited: false,
     textInput: "",
     renderMessageFrom: 0,
-    /**@type {Object<number, boolean>} */
+    /**@type {Object<string, boolean>} */
     messageVisibilityMapping: {},
     /**@type {Message[]} */
     updatedMessages: [],
@@ -104,10 +104,10 @@ export default {
     ...mapState(["user"]),
     ...mapState({ chatroomID: "activeChatroomID" }),
     ...mapGetters(["users"]),
-    ...mapGetters("messages", ["messagesMapping"]),
+    ...mapGetters("messages", ["analyzedMessageMapping"]),
     /**@returns {Message[]} */
     relatedMessages() {
-      return this.messagesMapping[this.chatroomID] ?? [];
+      return this.analyzedMessageMapping[this.chatroomID] ?? [];
     },
     /**@returns {Message[]} */
     renderedMessages() {

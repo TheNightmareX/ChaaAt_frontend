@@ -105,15 +105,18 @@ export default new Vuex.Store({
     messages: {
       namespaced: true,
       state: {
-        /**@type {Object<number, Message>} */
+        /**@type {Object<string, Message>} */
         messages: {},
       },
       getters: {
-        messagesMapping(state) {
+        messageMapping(state) {
           /**@type {Message[]} */
           const messages = Object.values(state.messages);
 
-          /**@type {Object<number, Message[]>} */
+          /**
+           * categorized according to the chatroom
+           * @type {Object<string, Message[]>}
+           */
           const mapping = {};
           messages.forEach((msg) => {
             const key = msg.chatroom;
@@ -121,10 +124,13 @@ export default new Vuex.Store({
             mapping[key].push(msg);
           });
 
-          /**@type {Object<number, AnalyzedMessage[]>} */
+          return mapping;
+        },
+        analyzedMessageMapping(state, getters) {
+          /**@type {Object<string, AnalyzedMessage[]>} */
           const analyzedMapping = {};
           /**@type {[string, Message[]][]} */
-          const entries = Object.entries(mapping);
+          const entries = Object.entries(getters.messageMapping);
           entries.forEach(([chatroomID, messages]) => {
             analyzedMapping[chatroomID] = messages.map((message, index) => {
               const INTERVAL = 60000 * 1;
@@ -143,7 +149,6 @@ export default new Vuex.Store({
               };
             });
           });
-
           return analyzedMapping;
         },
       },
@@ -167,13 +172,13 @@ export default new Vuex.Store({
     friendRelations: {
       namespaced: true,
       state: {
-        /**@type {Object<number, FriendRelation>} */
+        /**@type {Object<string, FriendRelation>} */
         relations: {},
         fixedMapping: {},
       },
       getters: {
         relations(state, getters, rootState) {
-          /**@type {Object<number, FriendRelation>} */
+          /**@type {Object<string, FriendRelation>} */
           const allRelations = state.relations;
           const accepted = [];
           const pending = [];
