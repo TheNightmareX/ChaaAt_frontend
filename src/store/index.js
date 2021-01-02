@@ -5,6 +5,7 @@ import * as apis from "../apis";
 /**@typedef {import("../apis/auth").User} User */
 /**@typedef {import("../apis/messages").Message} Message */
 /**@typedef {import("../apis/friend-relations").Relation} FriendRelation */
+/**@typedef {import("axios").CancelToken} CancelToken */
 
 /**@typedef {{ creationTime: Date, hasTimeGap: boolean, isDifferentSender: boolean, id: number, text: string, sender: number, chatroom: number }} AnalyzedMessage */
 /**@typedef {{ id: number, user: User, asSender: boolean, chatroom: number }} AnalyzedFriendRelation */
@@ -14,7 +15,7 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     /**@type {User} */
-    user: {},
+    user: { id: undefined, username: undefined },
     activeChatroomID: 0,
   },
   getters: {
@@ -37,7 +38,11 @@ export default new Vuex.Store({
     /**
      * Set the auth state if params are provided, otherwise reset the auth state and data.
      */
-    auth(state, { user } = {}) {
+    auth(
+      state,
+      /**@type {{ user: User }} */
+      { user } = { user: undefined }
+    ) {
       if (user) {
         state.user = user;
       } else {
@@ -47,7 +52,11 @@ export default new Vuex.Store({
         state.friendRelations.loaded = false;
       }
     },
-    switchChatroom(state, { chatroomID }) {
+    switchChatroom(
+      state,
+      /**@type {{ chatroomID: number }} */
+      { chatroomID }
+    ) {
       state.activeChatroomID = chatroomID;
     },
   },
@@ -55,7 +64,11 @@ export default new Vuex.Store({
     /**
      * Login if params are provided, otherwise load the current auth state.
      */
-    async login({ commit }, { username, password } = {}) {
+    async login(
+      { commit },
+      /**@type {{ username: string, password: string }} */
+      { username, password } = { username: undefined, password: undefined }
+    ) {
       commit("auth", {
         user:
           username && password
@@ -67,7 +80,11 @@ export default new Vuex.Store({
       await apis.auth.logout();
       commit("auth");
     },
-    async sync({ commit }, { cancelToken = undefined } = {}) {
+    async sync(
+      { commit },
+      /**@type {{ cancelToken: CancelToken }} */
+      { cancelToken } = { cancelToken: undefined }
+    ) {
       const updates = await apis.updates.list({ cancelToken });
       updates.forEach(([label, data]) => {
         switch (label) {
@@ -106,7 +123,7 @@ export default new Vuex.Store({
 
           /**@type {Object<number, AnalyzedMessage[]>} */
           const analyzedMapping = {};
-          /**@type {[number, Message[]][]} */
+          /**@type {[string, Message[]][]} */
           const entries = Object.entries(mapping);
           entries.forEach(([chatroomID, messages]) => {
             analyzedMapping[chatroomID] = messages.map((message, index) => {
@@ -118,7 +135,9 @@ export default new Vuex.Store({
                 creationTime: creationTime,
                 hasTimeGap:
                   !previous ||
-                  creationTime - new Date(previous.creationTime) > INTERVAL,
+                  creationTime.getTime() -
+                    new Date(previous.creationTime).getTime() >
+                    INTERVAL,
                 isDifferentSender:
                   !previous || message.sender != previous.sender,
               };
@@ -129,11 +148,12 @@ export default new Vuex.Store({
         },
       },
       mutations: {
-        append(state, { messages }) {
-          messages.forEach(
-            /**@param {Message} msg */
-            (msg) => Vue.set(state.messages, msg.id, msg)
-          );
+        append(
+          state,
+          /**@type {{ messages: Message[] }} */
+          { messages }
+        ) {
+          messages.forEach((msg) => Vue.set(state.messages, msg.id, msg));
         },
       },
       actions: {
@@ -153,8 +173,8 @@ export default new Vuex.Store({
       },
       getters: {
         relations(state, getters, rootState) {
-        /**@type {Object<number, FriendRelation>} */
-          const allRelations = state.relations
+          /**@type {Object<number, FriendRelation>} */
+          const allRelations = state.relations;
           const accepted = [];
           const pending = [];
           for (const id in allRelations) {
@@ -165,7 +185,7 @@ export default new Vuex.Store({
               chatroom,
             } = allRelations[id];
             /**@type {User} */
-            const currentUser = rootState.user
+            const currentUser = rootState.user;
             const asSender = sourceUser.username == currentUser.username;
             const user = asSender ? targetUser : sourceUser;
             (isAccepted ? accepted : pending).push({
@@ -179,13 +199,25 @@ export default new Vuex.Store({
         },
       },
       mutations: {
-        append(state, { relations }) {
+        append(
+          state,
+          /**@type {{ relations: FriendRelation[] }} */
+          { relations }
+        ) {
           relations.forEach((r) => Vue.set(state.relations, r.id, r));
         },
-        delete(state, { relationID }) {
+        delete(
+          state,
+          /**@type {{ relationID: number }} */
+          { relationID }
+        ) {
           Vue.delete(state.relations, relationID);
         },
-        setFixed(state, { relationID, fixed = undefined }) {
+        setFixed(
+          state,
+          /**@type {{ relationID: number, fixed: boolean }} */
+          { relationID, fixed = undefined }
+        ) {
           Vue.set(
             state.fixedMapping,
             relationID,

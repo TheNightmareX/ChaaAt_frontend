@@ -13,8 +13,8 @@ export default new (class {
   }
   /**
    *
-   * @param {{ username: string }}
-   * @returns {User}
+   * @param {{ username: string }} param0
+   * @returns {Promise<User>}
    */
   @api
   retrieve({ username }) {
@@ -22,7 +22,7 @@ export default new (class {
   }
   /**
    *
-   * @param {{ username: string, password: string }}
+   * @param {{ username: string, password: string }} param0
    * @returns {Promise<User>}
    */
   @api
@@ -38,8 +38,7 @@ export default new (class {
   }
   /**
    *
-   * @param {string} username
-   * @param {string} password
+   * @param {{ username: string, password: string }} param0
    * @returns {Promise<User>}
    */
   @api
@@ -48,7 +47,7 @@ export default new (class {
   }
   /**
    *
-   * @param {{ search: string, page: import(".").PageNum }}
+   * @param {{ search?: string, page?: import(".").PageNum, forEach?: (users: User[]) => any }} param0
    * @returns {Promise<import(".").PageOf<User>>}
    */
   @paginated

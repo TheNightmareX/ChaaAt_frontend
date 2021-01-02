@@ -1,12 +1,12 @@
 import { api, paginated } from ".";
 import axios from "axios";
 
-/**@typedef {{ id: number, text: string, sender: number, chatroom: number, creationTime: string }} Message */
+/**@typedef {{id: number, text: string, sender: number, chatroom: number, creationTime: string }} Message */
 
 export default new (class {
   /**
    *
-   * @param {{ page: import(".").PageNum, forEach: (messages: Message[]) => any }}
+   * @param {{ page?: import(".").PageNum, forEach?: (messages: Message[]) => any }} param0
    * @returns {Promise<import(".").PageOf<Message>>}
    */
   @paginated
@@ -16,7 +16,8 @@ export default new (class {
   }
   /**
    *
-   * @param {{ message: Message }}
+   * @param {{ message: Message }} param0
+   * @returns {Promise<Message>}
    */
   @api
   create({ message }) {

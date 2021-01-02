@@ -7,7 +7,7 @@ import axios from "axios";
 export default new (class {
   /**
    *
-   * @param {{ targetUser: number }}
+   * @param {{ targetUser: number, target_user: number }} param0
    * @returns {Promise<Relation>}
    */
   @api
@@ -15,7 +15,7 @@ export default new (class {
     return axios.post("friend-relations/", { target_user });
   }
   /**
-   * @param {{ page: import(".").PageNum, forEach: (relations: Relation[]) => any }}
+   * @param {{ page?: import(".").PageNum, forEach?: (relations: Relation[]) => any }} param0
    * @returns {Promise<import(".").PageOf<Relation>>}
    */
   @paginated
@@ -25,7 +25,7 @@ export default new (class {
   }
   /**
    *
-   * @param {{ id: number }}
+   * @param {{ id: number }} param0
    * @returns {Promise<Relation>}
    */
   @api
