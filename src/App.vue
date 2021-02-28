@@ -1,32 +1,92 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view/>
-  </div>
+  <v-app>
+    <template v-if="inited">
+      <v-fade-transition>
+        <router-view></router-view>
+      </v-fade-transition>
+
+      <Notifier ref="notifier"></Notifier>
+    </template>
+
+    <v-overlay :value="!inited">
+      <v-progress-circular
+        indeterminate
+        size="100"
+        width="7"
+      ></v-progress-circular>
+    </v-overlay>
+  </v-app>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+<script lang="ts">
+import * as models from "@/models";
+import { Component, Ref, Vue } from "vue-property-decorator";
+import Notifier from "@/components/Notifier.vue";
+
+declare module "vue/types/vue" {
+  interface Vue {
+    $context: {
+      user: models.User;
+      isMobile: boolean;
+    };
+
+    $notifier: Notifier;
+  }
 }
 
-#nav {
-  padding: 30px;
-}
+@Component({
+  components: { Notifier },
+})
+export default class extends Vue {
+  @Ref() notifier!: Notifier;
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
+  inited = false;
 
-#nav a.router-link-exact-active {
-  color: #42b983;
+  setProtoAttrs() {
+    Vue.prototype.$context = new Vue({
+      data: {
+        user: null,
+      },
+
+      computed: {
+        isMobile: () => this.$vuetify.breakpoint.xsOnly,
+      },
+    });
+
+    Object.defineProperty(Vue.prototype, "$notifier", {
+      get: () => this.notifier,
+      configurable: true,
+    });
+  }
+
+  setRouteGuards() {
+    this.$router.beforeEach((to, from, next) => {
+      if (
+        to.name &&
+        !to.matched.some((record) => record.meta.noAuth) &&
+        !this.$context.user
+      )
+        next({ name: "Login" });
+      else next();
+    });
+  }
+
+  async created() {
+    this.setProtoAttrs();
+    this.setRouteGuards();
+
+    try {
+      const authInfo = await new models.AuthHandler().getAuthInfo();
+
+      this.$context.user = await new models.UserResourceHandler().retrieve(
+        authInfo.pk
+      );
+    } catch (e) {
+      console.debug(e);
+      this.$router.push({ name: "Login" });
+    } finally {
+      this.inited = true;
+    }
+  }
 }
-</style>
+</script>
