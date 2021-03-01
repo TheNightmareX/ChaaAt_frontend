@@ -202,15 +202,30 @@ export abstract class SimpleResource<
   Fields extends FieldsSpecs,
   PKField extends keyof (Fields["common"] & Fields["receive"])
 > extends BaseResource<Fields, PKField> {
-  async list(url: URLDescription, config?: AxiosRequestConfig) {
-    const response = await this.axios.get<unknown>(url.value, config);
-    return this.parseListResponse(response.data).map((data) =>
-      this.field.toInternal(this.transformCase(data, "internal"))()
-    );
-  }
-  
   protected parseListResponse(data: unknown) {
     return data as FieldsValues<Fields>["toReceive"][];
+  }
+  protected parseCreateResponse(data: unknown) {
+    return data as FieldsValues<Fields>["toReceive"];
+  }
+  protected parseRetrieveResponse(data: unknown) {
+    return data as FieldsValues<Fields>["toReceive"];
+  }
+  protected parseUpdateResponse(data: unknown) {
+    return data as FieldsValues<Fields>["toReceive"];
+  }
+  protected parsePartialUpdateResponse(data: unknown) {
+    return data as FieldsValues<Fields>["toReceive"];
+  }
+
+  async list(url: URLDescription, config?: AxiosRequestConfig) {
+    const response = await this.axios.get(url.value, config);
+    return {
+      response,
+      data: this.parseListResponse(response.data).map((data) =>
+        this.field.toInternal(this.transformCase(data, "internal"))()
+      ),
+    };
   }
 
   async create(
@@ -218,29 +233,30 @@ export abstract class SimpleResource<
     data: FieldsValues<Fields>["toSend"],
     config?: AxiosRequestConfig
   ) {
-    const response = await this.axios.post<unknown>(
+    const response = await this.axios.post(
       url.value,
       this.transformCase(this.field.toExternal(data), "external"),
       config
     );
-    return this.field.toInternal(
-      this.transformCase(this.parseCreateResponse(response.data), "internal")
-    )();
-  }
-  
-  protected parseCreateResponse(data: unknown) {
-    return data as FieldsValues<Fields>["toReceive"];
+    return {
+      response,
+      data: this.field.toInternal(
+        this.transformCase(this.parseCreateResponse(response.data), "internal")
+      )(),
+    };
   }
 
   async retrieve(url: URLDescription, config?: AxiosRequestConfig) {
-    const response = await this.axios.get<unknown>(url.value, config);
-    return this.field.toInternal(
-      this.transformCase(this.parseRetrieveResponse(response.data), "internal")
-    )();
-  }
-  
-  protected parseRetrieveResponse(data: unknown) {
-    return data as FieldsValues<Fields>["toReceive"];
+    const response = await this.axios.get(url.value, config);
+    return {
+      response,
+      data: this.field.toInternal(
+        this.transformCase(
+          this.parseRetrieveResponse(response.data),
+          "internal"
+        )
+      )(),
+    };
   }
 
   async update(
@@ -248,18 +264,17 @@ export abstract class SimpleResource<
     data: FieldsValues<Fields>["toSend"],
     config?: AxiosRequestConfig
   ) {
-    const response = await this.axios.put<unknown>(
+    const response = await this.axios.put(
       url.value,
       this.transformCase(this.field.toExternal(data), "external"),
       config
     );
-    return this.field.toInternal(
-      this.transformCase(this.parseUpdateResponse(response.data), "internal")
-    )();
-  }
-  
-  protected parseUpdateResponse(data: unknown) {
-    return data as FieldsValues<Fields>["toReceive"];
+    return {
+      response,
+      data: this.field.toInternal(
+        this.transformCase(this.parseUpdateResponse(response.data), "internal")
+      )(),
+    };
   }
 
   async partialUpdate(
@@ -267,7 +282,7 @@ export abstract class SimpleResource<
     data: Partial<FieldsValues<Fields>["toSend"]>,
     config?: AxiosRequestConfig
   ) {
-    const response = await this.axios.patch<unknown>(
+    const response = await this.axios.patch(
       url.value,
       this.transformCase(
         this.field.toExternal(data as Required<typeof data>),
@@ -275,21 +290,21 @@ export abstract class SimpleResource<
       ),
       config
     );
-    return this.field.toInternal(
-      this.transformCase(
-        this.parsePartialUpdateResponse(response.data),
-        "internal"
-      )
-    )();
-  }
-  
-  protected parsePartialUpdateResponse(data: unknown) {
-    return data as FieldsValues<Fields>["toReceive"];
+    return {
+      response,
+      data: this.field.toInternal(
+        this.transformCase(
+          this.parsePartialUpdateResponse(response.data),
+          "internal"
+        )
+      )(),
+    };
   }
 
   async destroy(url: URLDescription, config?: AxiosRequestConfig) {
     if (!url.pk) throw new Error("Invalid URL description");
-    await this.axios.delete<void>(url.value, config);
+    const response = await this.axios.delete(url.value, config);
     delete this.objects[url.pk];
+    return { response };
   }
 }
