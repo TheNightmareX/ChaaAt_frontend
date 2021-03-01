@@ -34,7 +34,7 @@ export type Lazy<T> = {
 };
 
 export abstract class Field<
-  M extends Meta = Meta,
+  M extends Meta = {},
   VR = unknown,
   VI = VR,
   VS = VI,
@@ -54,12 +54,12 @@ export abstract class Field<
   abstract toExternalValue(value: VS): VE;
 
   toInternal(value: VR | null) {
-    type V = Values<Field<M, VR, VI, VS, VE>>["internal"];
+    type V = M["nullable"] extends true ? VI | null : VI;
     if (this.validateNull(value)) return () => value as V;
     return this.toInternalValue(value) as () => V;
   }
   toExternal(value: VS | undefined) {
-    type V = Values<Field<M, VR, VI, VS, VE>>["external"];
+    type V = M["optional"] extends true ? VE | undefined : VE;
     if (!this.meta.optional) return value as V;
     this.runAllValidations(value);
     return this.toExternalValue(value as VS) as V;
@@ -103,10 +103,14 @@ export abstract class SimpleField<M extends Meta, V = unknown> extends Field<
   }
 }
 
-export class StringField<Choices extends string> extends SimpleField<
-  Meta<{ minLength?: number; maxLength?: number; choices?: Choices[] }>,
-  Choices
-> {
+// TODO: generic choices
+export class StringField<
+  M extends Meta<{
+    minLength?: number;
+    maxLength?: number;
+    choices?: string[];
+  }>
+> extends SimpleField<M, string> {
   setup() {
     this.validators.push(new TypeValidator("string"));
     if (this.meta.choices)
@@ -121,10 +125,10 @@ export class StringField<Choices extends string> extends SimpleField<
   }
 }
 
-export class NumberField<Choices extends number> extends SimpleField<
-  Meta<{ maxValue?: number; minValue?: number; choices?: Choices[] }>,
-  Choices
-> {
+// TODO: generic choices
+export class NumberField<
+  M extends Meta<{ maxValue?: number; minValue?: number; choices?: number[] }>
+> extends SimpleField<M, number> {
   setup() {
     this.validators.push(new TypeValidator("number"));
     if (this.meta.choices)
@@ -139,7 +143,7 @@ export class NumberField<Choices extends number> extends SimpleField<
   }
 }
 
-export class BooleanField extends SimpleField<Meta, boolean> {
+export class BooleanField<M extends Meta> extends SimpleField<M, boolean> {
   setup() {
     this.validators.push(new TypeValidator("boolean"));
   }
@@ -172,25 +176,25 @@ export class DateField extends Field<
   }
 }
 
-export class ListField<F extends Field> extends Field<
-  Meta<{ field: F }>,
-  Values<F>["toReceive"][],
-  Values<F>["internal"][],
-  Values<F>["toSend"][],
-  Values<F>["external"][]
+export class ListField<M extends Meta<{ field: Field }>> extends Field<
+  M,
+  Values<M["field"]>["toReceive"][],
+  Values<M["field"]>["internal"][],
+  Values<M["field"]>["toSend"][],
+  Values<M["field"]>["external"][]
 > {
   setup() {
     this.validators.push(new IsInstanceValidator(Array));
   }
 
-  toInternalValue(value: Values<F>["toReceive"][]) {
+  toInternalValue(value: Values<M["field"]>["toReceive"][]) {
     const ret = value.map((v) => this.meta.field.toInternal(v));
-    return () => ret as Values<F>["internal"][];
+    return () => ret as Values<M["field"]>["internal"][];
   }
-  toExternalValue(value: Values<F>["toSend"][]) {
-    return value.map((v) =>
-      this.meta.field.toExternal(v)
-    ) as Values<F>["external"][];
+  toExternalValue(value: Values<M["field"]>["toSend"][]) {
+    return value.map((v) => this.meta.field.toExternal(v)) as Values<
+      M["field"]
+    >["external"][];
   }
   validate(value: unknown[]) {
     value.forEach((v) => this.meta.field.runAllValidations(v));
