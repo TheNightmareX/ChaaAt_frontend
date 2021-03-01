@@ -10,6 +10,7 @@ import {
 
 export type Meta<Extra extends Record<string, unknown> = {}> = {
   nullable?: boolean;
+  rules?: ((v: unknown) => true | string)[];
 } & Extra;
 
 export type Value<M extends Meta, T> = M["nullable"] extends true
@@ -68,16 +69,23 @@ export abstract class Field<
   runAllValidations(value: unknown) {
     if (this.validateNull(value)) return;
     this.runValidators(value);
+    this.validateRules(value);
     this.validate(value);
-  }
-  runValidators(value: unknown) {
-    this.validators.forEach((v) => v.validate(value, this));
   }
   validateNull(value: unknown): value is null {
     if (value == null)
       if (this.meta.nullable) return true;
       else throw new ValidationError(value, "Not nullable");
     else return false;
+  }
+  runValidators(value: unknown) {
+    this.validators.forEach((v) => v.validate(value, this));
+  }
+  validateRules(value: unknown) {
+    this.meta.rules?.forEach((rule) => {
+      const ret = rule(value);
+      if (typeof ret == "string") throw new ValidationError(value, ret);
+    });
   }
   validate(value: unknown) {
     return;
