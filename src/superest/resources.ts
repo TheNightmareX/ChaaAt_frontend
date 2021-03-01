@@ -1,12 +1,82 @@
-import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosInstance, AxiosRequestConfig } from "axios";
 import { Field, Lazy, Meta, Values } from "./fields";
 import { IsInstanceValidator } from "./validators";
 
 export type PK = string | number;
 
-export type FieldsSpecs = Record<
+/**
+ * The generic type `F` here is used to get the detailed literal types of the fields' meta.
+ *
+ * `F` should **NOT** have a value, always keep it empty.
+ *
+ * Here is an example of why I did this:
+ *
+ *      function f1<Fields extends FieldsSpecs>(arg: Fields) {}
+ *      function f2<Fields extends FieldsSpecs<F>, F extends Field>(arg: Fields) {}
+ *
+ *      f1({
+ *        common: {
+ *          field: new StringField({ nullable: true }),
+ *        },
+ *        receive: {},
+ *        send: {},
+ *      });
+ *
+ *      f2({
+ *        common: {
+ *          field: new StringField({ nullable: true }),
+ *        },
+ *        receive: {},
+ *        send: {},
+ *      });
+ *
+ * Then check the types:
+ *
+ *      function f1<{
+ *        common: {
+ *            field: StringField<{
+ *                nullable: boolean;  // <- NOTICE HERE
+ *            }>;
+ *        };
+ *        receive: {};
+ *        send: {};
+ *      }>(arg: {
+ *        common: {
+ *            field: StringField<{
+ *                nullable: boolean;  // <- NOTICE HERE
+ *            }>;
+ *        };
+ *        receive: {};
+ *        send: {};
+ *      }): void
+ *
+ *      function f2<{
+ *        common: {
+ *            field: StringField<{
+ *                nullable: true;  // <- NOTICE HERE
+ *            }>;
+ *        };
+ *        receive: {};
+ *        send: {};
+ *      }, Field<{}, unknown, unknown, unknown, unknown>>(arg: {
+ *        common: {
+ *            field: StringField<{
+ *                nullable: true;  // <- NOTICE HERE
+ *            }>;
+ *        };
+ *        receive: {};
+ *        send: {};
+ *      }): void
+ *
+ * As you can see: If I don't set an empty generic type, the type checker will replace
+ * the literal types to the normal types, which make it difficult to define further type
+ * limits.
+ *
+ * This is not a perfect solution, so I will keep seeking for better solutions.
+ */
+export type FieldsSpecs<F extends Field = Field> = Record<
   "common" | "receive" | "send",
-  Record<string, Field>
+  Record<string, F>
 >;
 
 export type FieldsValues<Fields extends FieldsSpecs> = {
@@ -38,8 +108,9 @@ export type Objects<Fields extends FieldsSpecs> = Record<
 >;
 
 export abstract class BaseResource<
-  Fields extends FieldsSpecs,
-  PKField extends keyof (Fields["common"] & Fields["receive"])
+  Fields extends FieldsSpecs<F>,
+  PKField extends keyof (Fields["common"] & Fields["receive"]),
+  F extends Field
 > {
   readonly Field;
   protected readonly field;
@@ -177,9 +248,10 @@ export abstract class BaseResource<
 }
 
 export abstract class SimpleResource<
-  Fields extends FieldsSpecs,
-  PKField extends keyof (Fields["common"] & Fields["receive"])
-> extends BaseResource<Fields, PKField> {
+  Fields extends FieldsSpecs<F>,
+  PKField extends keyof (Fields["common"] & Fields["receive"]),
+  F extends Field
+> extends BaseResource<Fields, PKField, F> {
   protected parseListResponse(data: unknown) {
     return data as FieldsValues<Fields>["toReceive"][];
   }
