@@ -37,13 +37,6 @@ export type Objects<Fields extends FieldsSpecs> = Record<
   FieldsValues<Fields>["internal"]
 >;
 
-export interface URLDescription {
-  pk?: PK;
-  action?: string;
-  parent?: URLDescription;
-  value: string;
-}
-
 export abstract class BaseResource<
   Fields extends FieldsSpecs,
   PKField extends keyof (Fields["common"] & Fields["receive"])
@@ -65,23 +58,8 @@ export abstract class BaseResource<
     this.field = new this.Field({});
   }
 
-  getURL({
-    pk,
-    action,
-    parent,
-  }: {
-    pk?: PK;
-    action?: string;
-    parent?: URLDescription;
-  } = {}): URLDescription {
-    return {
-      pk,
-      action,
-      parent,
-      value: `${parent?.value ?? "/"}${this.basename}/${pk ? `${pk}/` : ""}${
-        action ? `${action}/` : ""
-      }`,
-    };
+  getURL(pk: PK = "", action = "") {
+    return `/${this.basename}/${pk && pk + "/"}${action && action + "/"}`;
   }
 
   protected getPK(value: FieldsValues<Fields>["internal"] | PK) {
@@ -218,8 +196,8 @@ export abstract class SimpleResource<
     return data as FieldsValues<Fields>["toReceive"];
   }
 
-  async list(url: URLDescription, config?: AxiosRequestConfig) {
-    const response = await this.axios.get(url.value, config);
+  async list(config?: AxiosRequestConfig) {
+    const response = await this.axios.get(this.getURL(), config);
     return {
       response,
       data: this.parseListResponse(response.data).map((data) =>
@@ -229,12 +207,11 @@ export abstract class SimpleResource<
   }
 
   async create(
-    url: URLDescription,
     data: FieldsValues<Fields>["toSend"],
     config?: AxiosRequestConfig
   ) {
     const response = await this.axios.post(
-      url.value,
+      this.getURL(),
       this.transformCase(this.field.toExternal(data), "external"),
       config
     );
@@ -246,8 +223,8 @@ export abstract class SimpleResource<
     };
   }
 
-  async retrieve(url: URLDescription, config?: AxiosRequestConfig) {
-    const response = await this.axios.get(url.value, config);
+  async retrieve(pk: PK, config?: AxiosRequestConfig) {
+    const response = await this.axios.get(this.getURL(pk), config);
     return {
       response,
       data: this.field.toInternal(
@@ -260,12 +237,12 @@ export abstract class SimpleResource<
   }
 
   async update(
-    url: URLDescription,
+    pk: PK,
     data: FieldsValues<Fields>["toSend"],
     config?: AxiosRequestConfig
   ) {
     const response = await this.axios.put(
-      url.value,
+      this.getURL(pk),
       this.transformCase(this.field.toExternal(data), "external"),
       config
     );
@@ -278,12 +255,12 @@ export abstract class SimpleResource<
   }
 
   async partialUpdate(
-    url: URLDescription,
+    pk: PK,
     data: Partial<FieldsValues<Fields>["toSend"]>,
     config?: AxiosRequestConfig
   ) {
     const response = await this.axios.patch(
-      url.value,
+      this.getURL(pk),
       this.transformCase(
         this.field.toExternal(data as Required<typeof data>),
         "external"
@@ -301,10 +278,9 @@ export abstract class SimpleResource<
     };
   }
 
-  async destroy(url: URLDescription, config?: AxiosRequestConfig) {
-    if (!url.pk) throw new Error("Invalid URL description");
-    const response = await this.axios.delete(url.value, config);
-    delete this.objects[url.pk];
+  async destroy(pk: PK, config?: AxiosRequestConfig) {
+    const response = await this.axios.delete(this.getURL(pk), config);
+    delete this.objects[pk];
     return { response };
   }
 }
