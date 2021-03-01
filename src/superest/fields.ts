@@ -10,12 +10,9 @@ import {
 
 export type Meta<Extra extends Record<string, unknown> = {}> = {
   nullable?: boolean;
+  optional?: boolean;
   rules?: ((v: unknown) => true | string)[];
 } & Extra;
-
-export type Value<M extends Meta, T> = M["nullable"] extends true
-  ? T | null
-  : T;
 
 export type Values<F extends Field> = F extends Field<
   infer M,
@@ -25,10 +22,10 @@ export type Values<F extends Field> = F extends Field<
   infer VE
 >
   ? {
-      toReceive: Value<M, VR>;
-      internal: Value<M, VI>;
-      toSend: Value<M, VS>;
-      external: Value<M, VE>;
+      toReceive: M["nullable"] extends true ? VR | null : VR;
+      internal: M["nullable"] extends true ? VI | null : VI;
+      toSend: M["optional"] extends true ? VS | undefined : VS;
+      external: M["optional"] extends true ? VE | undefined : VE;
     }
   : never;
 
@@ -57,13 +54,15 @@ export abstract class Field<
   abstract toExternalValue(value: VS): VE;
 
   toInternal(value: VR | null) {
-    if (this.validateNull(value)) return () => value as Value<M, VI>;
-    return this.toInternalValue(value) as () => Value<M, VI>;
+    type V = Values<Field<M, VR, VI, VS, VE>>["internal"];
+    if (this.validateNull(value)) return () => value as V;
+    return this.toInternalValue(value) as () => V;
   }
-  toExternal(value: VS | null) {
-    if (this.validateNull(value)) return value as Value<M, VE>;
+  toExternal(value: VS | undefined) {
+    type V = Values<Field<M, VR, VI, VS, VE>>["external"];
+    if (!this.meta.optional) return value as V;
     this.runAllValidations(value);
-    return this.toExternalValue(value) as Value<M, VE>;
+    return this.toExternalValue(value as VS) as V;
   }
 
   runAllValidations(value: unknown) {
