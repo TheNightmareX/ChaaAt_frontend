@@ -8,7 +8,9 @@ import {
   ValueRangeValidator,
 } from "./validators";
 
-export type Meta<Extra extends Record<string, unknown> = {}> = {
+export type Meta<
+  Extra extends Record<string, unknown> = Record<string, unknown>
+> = {
   nullable?: boolean;
   optional?: boolean;
   rules?: ((v: unknown) => true | string)[];
@@ -27,7 +29,7 @@ export type Values<F extends Field> = F extends Field<
       toSend: M["optional"] extends true ? VS | undefined : VS;
       external: M["optional"] extends true ? VE | undefined : VE;
     }
-  : never;
+  : unknown;
 
 export type Lazy<T> = {
   [P in keyof T]: () => T[P];
