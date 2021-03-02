@@ -1,6 +1,6 @@
 import { AxiosInstance, AxiosRequestConfig } from "axios";
 import { Field, Lazy, Meta, Values } from "./fields";
-import { IsInstanceValidator } from "./validators";
+import { IsInstanceValidator, ValidationError } from "./validators";
 
 export type PK = string | number;
 
@@ -254,7 +254,12 @@ export abstract class BaseResource<
                     ...resource.description.fields.common,
                     ...resource.description.fields.receive,
                   },
-                  (k, v, field) => field.toInternal(v)
+                  (k, v, field) =>
+                    this.handleValidationError(
+                      field.toInternal.bind(field),
+                      value,
+                      k
+                    )(v)
                 ) as Lazy<Internal>
               )
           : () => resource.objects[value];
@@ -266,11 +271,15 @@ export abstract class BaseResource<
             ...resource.description.fields.common,
             ...resource.description.fields.send,
           },
-          (k, v, field) => {
-            return field.toExternal(v);
-          }
+          (k, v, field) =>
+            this.handleValidationError(
+              field.toExternal.bind(field),
+              value,
+              k
+            )(v)
         ) as External;
       }
+
       validate(value: Record<string, unknown>) {
         resource.matchFields(
           value,
@@ -281,6 +290,24 @@ export abstract class BaseResource<
           },
           (k, v, field) => field.runAllValidations(v)
         );
+      }
+
+      handleValidationError<T extends (...args: unknown[]) => unknown>(
+        fn: T,
+        data: unknown,
+        key: string
+      ) {
+        return (...args: Parameters<T>) => {
+          try {
+            return fn(...args) as ReturnType<T>;
+          } catch (error) {
+            if (error instanceof ValidationError) {
+              error.data = data;
+              error.path.unshift(key);
+            }
+            throw error;
+          }
+        };
       }
     };
   }

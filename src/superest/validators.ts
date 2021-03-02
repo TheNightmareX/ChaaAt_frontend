@@ -1,8 +1,19 @@
 import { Field } from "./fields";
 
 export class ValidationError extends Error {
-  constructor(value: unknown, message: string) {
-    super(`Validation Failed: [ ${value} ]:  ${message}`);
+  path: string[] = [];
+
+  constructor(public data: unknown, readonly rawMessage: string) {
+    super();
+    this.name = this.constructor.name;
+  }
+
+  get message() {
+    return `[${this.path.join(".")}]: ${this.rawMessage}\n${JSON.stringify(
+      this.data,
+      undefined,
+      4
+    )}`;
   }
 }
 
@@ -75,9 +86,6 @@ export class ChoicesValidator extends Validator {
   }
   validate(value: unknown) {
     if (!this.choices.includes(value))
-      throw new ValidationError(
-        value,
-        `Valid choices: "${this.choices}"`
-      );
+      throw new ValidationError(value, `Valid choices: "${this.choices}"`);
   }
 }
