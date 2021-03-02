@@ -272,9 +272,9 @@ export abstract class SimpleResource<
     const response = await this.axios.get(this.getURL(), config);
     return {
       response,
-      data: this.parseListResponse(response.data).map((data) =>
-        this.field.toInternal(this.transformCase(data, "internal"))()
-      ),
+      data: this.parseListResponse(
+        this.transformCase(response.data, "internal")
+      ).map((data) => this.field.toInternal(data)()),
     };
   }
 
