@@ -151,21 +151,28 @@ export abstract class BaseResource<
   }
 
   protected commit<T extends FieldsValues<Fields>["internal"]>(data: Lazy<T>) {
-    const processed = new Proxy(data, {
-      get: (target, p: string) => (p in target ? target[p]() : undefined),
-      set: (target, p: string, value) => {
-        const fields = {
-          ...this.description.fields.common,
-          ...this.description.fields.send,
-        };
-        if (!(p in fields)) return false;
-        fields[p].runAllValidations(value);
-        target[p as keyof T] = value;
-        return true;
-      },
-    }) as T;
-    this.objects[this.getPK(processed)] = processed;
-    return processed;
+    // define descriptors because Vue 2.x will also define descriptors on the object 
+    // to observe changes, which will cover the raw data and make the `Proxy` get a wrong
+    // value
+    const fields = {
+      ...this.description.fields.common,
+      ...this.description.fields.receive,
+      ...this.description.fields.send,
+    };
+    const processed = {};
+    for (const k in data) {
+      Object.defineProperty(processed, k, {
+        get: data[k],
+        set: (v) => {
+          fields[k].runAllValidations(v);
+          data[k as keyof typeof data] = v;
+        },
+        configurable: true,
+        enumerable: true,
+      });
+    }
+    this.objects[this.getPK(processed as T)] = processed as T;
+    return processed as T;
   }
 
   protected transformCase<R extends Record<string, unknown>>(
