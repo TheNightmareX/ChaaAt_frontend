@@ -146,7 +146,9 @@ export abstract class BaseResource<
     }
   ) {
     this.Field = this.buildField();
-    this.field = new this.Field({});
+    this.field = new this.Field({}) as InstanceType<
+      BaseResource<Fields, PKField, Getters, F>["Field"]
+    >;
   }
 
   getURL(pk: PK = "", action = "") {
@@ -231,8 +233,8 @@ export abstract class BaseResource<
     type ToSend = FieldsValues<Fields>["toSend"];
     type External = FieldsValues<Fields>["external"];
 
-    return class ResourceField extends Field<
-      Meta,
+    return class ResourceField<M extends Meta> extends Field<
+      M,
       ToReceive,
       Internal,
       ToSend,
