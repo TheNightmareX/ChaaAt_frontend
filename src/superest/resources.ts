@@ -79,6 +79,11 @@ export type FieldsSpecs<F extends Field = Field> = Record<
   Record<string, F>
 >;
 
+export type GettersSpecs<Fields extends FieldsSpecs> = Record<
+  string,
+  (data: FieldsValues<Fields>["internal"]) => unknown
+>;
+
 export type FieldsValues<Fields extends FieldsSpecs> = {
   toReceive: {
     [N in keyof (Fields["common"] & Fields["receive"])]: Values<
@@ -102,14 +107,25 @@ export type FieldsValues<Fields extends FieldsSpecs> = {
   };
 };
 
-export type Objects<Fields extends FieldsSpecs> = Record<
-  PK,
-  FieldsValues<Fields>["internal"]
->;
+export type Data<
+  Fields extends FieldsSpecs,
+  Getters extends GettersSpecs<Fields>
+> = FieldsValues<Fields>["internal"] &
+  { [K in keyof Getters]: ReturnType<Getters[K]> };
+
+export type ResData<Res> = Res extends BaseResource<
+  infer Fields,
+  infer PKField,
+  infer Getters,
+  infer F
+>
+  ? Data<Fields, Getters>
+  : unknown;
 
 export abstract class BaseResource<
   Fields extends FieldsSpecs<F>,
   PKField extends keyof (Fields["common"] & Fields["receive"]),
+  Getters extends GettersSpecs<Fields>,
   F extends Field
 > {
   readonly Field;
@@ -122,8 +138,12 @@ export abstract class BaseResource<
 
   constructor(
     protected readonly basename: string,
-    readonly objects: Objects<Fields>,
-    protected readonly description: { fields: Fields; pkField: PKField }
+    readonly objects: Record<PK, Data<Fields, Getters>>,
+    protected readonly description: {
+      fields: Fields;
+      pkField: PKField;
+      getters?: Getters;
+    }
   ) {
     this.Field = this.buildField();
     this.field = new this.Field({});
@@ -150,15 +170,17 @@ export abstract class BaseResource<
     return Object.fromEntries(entries) as Record<K, R>;
   }
 
-  protected commit<T extends FieldsValues<Fields>["internal"]>(data: Lazy<T>) {
-    // define descriptors because Vue 2.x will also define descriptors on the object 
+  protected commit(data: Lazy<FieldsValues<Fields>["internal"]>) {
+    // define descriptors because Vue 2.x will also define descriptors on the object
     // to observe changes, which will cover the raw data and make the `Proxy` get a wrong
     // value
+    type V = Data<Fields, Getters>;
     const fields = {
       ...this.description.fields.common,
       ...this.description.fields.receive,
       ...this.description.fields.send,
     };
+    const getters = this.description.getters;
     const processed = {};
     for (const k in data) {
       Object.defineProperty(processed, k, {
@@ -171,8 +193,16 @@ export abstract class BaseResource<
         enumerable: true,
       });
     }
-    this.objects[this.getPK(processed as T)] = processed as T;
-    return processed as T;
+    if (getters)
+      for (const k in getters) {
+        Object.defineProperty(processed, k, {
+          get: () => getters[k](processed as V),
+          configurable: true,
+          enumerable: true,
+        });
+      }
+    this.objects[this.getPK(processed as V)] = processed as V;
+    return processed as V;
   }
 
   protected transformCase<R extends Record<string, unknown>>(
@@ -183,7 +213,7 @@ export abstract class BaseResource<
     const ret: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(data)) {
       ret[handler(k)] =
-        typeof v == "object"
+        v && typeof v == "object"
           ? v instanceof Array
             ? v.map((v) => this.transformCase(v, type))
             : this.transformCase(v as typeof data, type)
@@ -257,8 +287,9 @@ export abstract class BaseResource<
 export abstract class SimpleResource<
   Fields extends FieldsSpecs<F>,
   PKField extends keyof (Fields["common"] & Fields["receive"]),
+  Getters extends GettersSpecs<Fields>,
   F extends Field
-> extends BaseResource<Fields, PKField, F> {
+> extends BaseResource<Fields, PKField, Getters, F> {
   protected parseListResponse(data: unknown) {
     return data as FieldsValues<Fields>["toReceive"][];
   }
