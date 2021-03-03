@@ -153,6 +153,12 @@ export abstract class BaseResource<
     >;
   }
 
+  clearObjects() {
+    for (const k in this.objects) {
+      delete this.objects[k];
+    }
+  }
+
   getURL(pk: PK = "", action = "") {
     return `/${this.basename}/${pk && pk + "/"}${action && action + "/"}`;
   }
