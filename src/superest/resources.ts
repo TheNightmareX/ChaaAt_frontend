@@ -211,8 +211,33 @@ export abstract class BaseResource<
           enumerable: true,
         });
       }
-    this.objects[this.getPK(processed as V)] = processed as V;
-    return processed as V;
+
+    /**
+     * Make sure that the object obtained through a same pk always be the same one,
+     * otherwise the following case may happen and cause confusion.
+     *
+     *      await res.retrieve(1)
+     *      const objOld = res.objects[1]
+     *      await res.retrieve(1)
+     *      const objNew = res.objects[1]
+     *      console.log(objOld.pk == objNew.pk) // true
+     *      console.log(objOld == objNew) // false
+     *
+     */
+    const save = (data: V) => {
+      const pk = this.getPK(data);
+
+      if (!this.objects[pk]) {
+        this.objects[pk] = data;
+      } else {
+        Object.entries(data).forEach(([k, v]) => {
+          if (this.description.getters && k in this.description.getters) return;
+          this.objects[pk][k as keyof V] = v as V[keyof V];
+        });
+      }
+      return data;
+    };
+    return save(processed as V);
   }
 
   protected transformCase<R extends Record<string, unknown>>(
