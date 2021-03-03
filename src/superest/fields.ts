@@ -35,6 +35,8 @@ export type Lazy<T> = {
   [P in keyof T]: () => T[P];
 };
 
+export type NonLazy<T> = T extends Lazy<infer R> ? R : unknown;
+
 export abstract class Field<
   M extends Meta = {},
   VR = unknown,

@@ -117,6 +117,7 @@ export type ResData<Res> = Res extends BaseResource<
   infer Fields,
   infer PKField,
   infer Getters,
+  infer Extension,
   infer F
 >
   ? Data<Fields, Getters>
@@ -126,6 +127,7 @@ export abstract class BaseResource<
   Fields extends FieldsSpecs<F>,
   PKField extends keyof (Fields["common"] & Fields["receive"]),
   Getters extends GettersSpecs<Fields>,
+  Extension,
   F extends Field
 > {
   readonly Field;
@@ -135,7 +137,6 @@ export abstract class BaseResource<
     "internal" | "external",
     (v: string) => string
   >;
-
   constructor(
     protected readonly basename: string,
     readonly objects: Record<PK, Data<Fields, Getters>>,
@@ -143,11 +144,12 @@ export abstract class BaseResource<
       fields: Fields;
       pkField: PKField;
       getters?: Getters;
-    }
+    },
+    readonly extension?: Extension
   ) {
     this.Field = this.buildField();
     this.field = new this.Field({}) as InstanceType<
-      BaseResource<Fields, PKField, Getters, F>["Field"]
+      BaseResource<Fields, PKField, Getters, Extension, F>["Field"]
     >;
   }
 
@@ -317,8 +319,9 @@ export abstract class SimpleResource<
   Fields extends FieldsSpecs<F>,
   PKField extends keyof (Fields["common"] & Fields["receive"]),
   Getters extends GettersSpecs<Fields>,
+  Extension,
   F extends Field
-> extends BaseResource<Fields, PKField, Getters, F> {
+> extends BaseResource<Fields, PKField, Getters, Extension, F> {
   protected parseListResponse(data: unknown) {
     return data as FieldsValues<Fields>["toReceive"][];
   }
