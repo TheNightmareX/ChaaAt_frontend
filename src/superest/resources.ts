@@ -140,7 +140,7 @@ export abstract class BaseResource<
   constructor(
     protected readonly basename: string,
     readonly objects: Record<PK, Data<Fields, Getters>>,
-    protected readonly description: {
+    readonly description: {
       fields: Fields;
       pkField: PKField;
       getters?: Getters;
