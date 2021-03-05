@@ -74,17 +74,20 @@ export type PK = string | number;
  *
  * This is not a perfect solution, so I will keep seeking for better solutions.
  */
-export type FieldsSpecs<F extends Field = Field> = Record<
+export type FieldsDesc<F extends Field = Field> = Record<
   "common" | "receive" | "send",
   Record<string, F>
 >;
 
-export type GettersSpecs<Fields extends FieldsSpecs> = Record<
+export type GettersDesc<Fields extends FieldsDesc> = Record<
   string,
   (data: FieldsValues<Fields>["internal"]) => unknown
 >;
 
-export type FieldsValues<Fields extends FieldsSpecs> = {
+export type PKFieldDesc<Fields extends FieldsDesc> = keyof (Fields["common"] &
+  Fields["receive"]);
+
+export type FieldsValues<Fields extends FieldsDesc> = {
   toReceive: {
     [N in keyof (Fields["common"] & Fields["receive"])]: Values<
       (Fields["common"] & Fields["receive"])[N]
@@ -108,8 +111,8 @@ export type FieldsValues<Fields extends FieldsSpecs> = {
 };
 
 export type Data<
-  Fields extends FieldsSpecs,
-  Getters extends GettersSpecs<Fields>
+  Fields extends FieldsDesc,
+  Getters extends GettersDesc<Fields>
 > = FieldsValues<Fields>["internal"] &
   { [K in keyof Getters]: ReturnType<Getters[K]> };
 
@@ -123,9 +126,9 @@ export type ResData<Res> = Res extends BaseResource<
   : unknown;
 
 export abstract class BaseResource<
-  Fields extends FieldsSpecs<F>,
-  PKField extends keyof (Fields["common"] & Fields["receive"]),
-  Getters extends GettersSpecs<Fields>,
+  Fields extends FieldsDesc<F>,
+  PKField extends PKFieldDesc<Fields>,
+  Getters extends GettersDesc<Fields>,
   F extends Field
 > {
   readonly Field;
@@ -344,9 +347,9 @@ export abstract class BaseResource<
 }
 
 export abstract class SimpleResource<
-  Fields extends FieldsSpecs<F>,
-  PKField extends keyof (Fields["common"] & Fields["receive"]),
-  Getters extends GettersSpecs<Fields>,
+  Fields extends FieldsDesc<F>,
+  PKField extends PKFieldDesc<Fields>,
+  Getters extends GettersDesc<Fields>,
   F extends Field
 > extends BaseResource<Fields, PKField, Getters, F> {
   protected parseListResponse(data: unknown) {
